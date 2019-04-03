@@ -1,17 +1,15 @@
 import lejos.hardware.Button;
 import lejos.hardware.motor.Motor;
+import lejos.utility.Delay;
 
 public class Main
 {
     public static void main(String[] args)
     {
         Robot robot = new Robot();
-        robot.MoveForwardC(800);
-        //robot.MoveBackwardC(4200);
-        //Button.waitForAnyPress();
-        //robot.MoveForwardAB(400);
-        //robot.MoveForwardC(4200);
-        //robot.TurnClockwiseAB(2500, 900);
+        robot.TurnCounterclockwiseAB(90);
+        //Delay.msDelay(1000);
+        //robot.TurnCounterclockwiseAB(1920);
         Button.waitForAnyPress();
     }
 }
