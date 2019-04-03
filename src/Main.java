@@ -1,13 +1,12 @@
 import lejos.hardware.Button;
 import lejos.hardware.motor.Motor;
 
-public class HelloWorld
+public class Main
 {
     public static void main(String[] args)
     {
         Robot robot = new Robot();
-        Motor.A.forward();
-        Motor.B.forward();
+        robot.MoveForwardC(800);
         //robot.MoveBackwardC(4200);
         //Button.waitForAnyPress();
         //robot.MoveForwardAB(400);
