@@ -165,4 +165,15 @@ public class Robot
     {
         Motor.C.rotate(-degrees, false);
     }
+
+    public void MoveBackwardD(int speed)
+    {
+        Motor.D.setSpeed(speed);
+        Motor.D.backward();
+    }
+    public void MoveForwardD(int speed)
+    {
+        Motor.D.setSpeed(speed);
+        Motor.D.forward();
+    }
 }

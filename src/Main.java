@@ -7,9 +7,8 @@ public class Main
     public static void main(String[] args)
     {
         Robot robot = new Robot();
-        robot.TurnCounterclockwiseAB(90);
-        //Delay.msDelay(1000);
-        //robot.TurnCounterclockwiseAB(1920);
+        robot.MoveForwardAB(900);
+        robot.MoveBackwardD(900);
         Button.waitForAnyPress();
     }
 }
