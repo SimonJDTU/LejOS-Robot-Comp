@@ -16,6 +16,7 @@ import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import nu.pattern.OpenCV;
 import org.opencv.core.*;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.*;
@@ -37,9 +38,8 @@ public class ComputerVision extends JPanel{
     public static void main(String[] args) throws InterruptedException {
 
         // Loading core libary to get accesses to the camera
-        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-        ComputerVision t = new ComputerVision();
-
+       //System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+        OpenCV.loadLocally();
         // Capturing from usb Camera
         // USB CAM index 4 , own i 0
         VideoCapture camera = new VideoCapture(0);
