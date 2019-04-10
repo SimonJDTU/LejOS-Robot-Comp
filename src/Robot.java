@@ -8,7 +8,6 @@ public class Robot
 {
     private static EV3UltrasonicSensor UltrasonicSensor = new EV3UltrasonicSensor(SensorPort.S1);
 
-
     /**
      * Makes the robot move forward using the motors at input A and B<br>
      * @param speed The speed at which the two motors move<br>
@@ -88,28 +87,29 @@ public class Robot
      * Method to capture the balls with the Motor D<br>
      * Makes the wheels spin inwards to capture the balls from the front of the robot<br>
      * Starts the motor and makes it turn at a certain speed given with the speed parameter<br>
-     * @param speed The speed at which the motor D turns. Can be 0-900<br>
+     * @param amountOfBalls The amount of balls that is being catched.
      */
-    public void CatchBalls(int speed)
+    public void CatchBalls(int amountOfBalls)
     {
-        Motor.C.setSpeed(speed);
-        Motor.D.setSpeed(speed);
-        Motor.C.backward();
+        Motor.C.setSpeed(800);
+        Motor.D.setSpeed(600);
         Motor.D.backward();
+        Motor.C.rotate(amountOfBalls * -1500, false);
+
     }
 
     /**
      * Method to capture the balls with the Motor D<br>
      * Makes the wheels spin outwards to release the balls from the front of the robot<br>
      * Starts the motor and makes it turn at a certain speed given with the speed parameter<br>
-     * @param speed The speed at which the motor D turns. Can be 0-900<br>
+     * @param amountOfBalls The amount of balls that should be released. Can be 1-3 <br>
      */
-    public void ReleaseBalls(int speed)
+    public void ReleaseBalls(int amountOfBalls)
     {
-        Motor.C.setSpeed(speed);
-        Motor.D.setSpeed(speed);
-        Motor.C.forward();
+        Motor.C.setSpeed(800);
+        Motor.D.setSpeed(600);
         Motor.D.forward();
+        Motor.C.rotate(amountOfBalls * 1500, false);
     }
 
     /**
