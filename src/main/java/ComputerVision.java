@@ -1,18 +1,33 @@
-import org.opencv.core.Core;
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Scalar;
-import org.opencv.highgui.HighGui;
-import org.opencv.imgproc.Imgproc;
-import org.opencv.videoio.VideoCapture;
-import org.opencv.core.Size;
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Image;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.awt.image.WritableRaster;
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
+
+import javax.imageio.ImageIO;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+
+import org.opencv.core.*;
+import org.opencv.highgui.HighGui;
+import org.opencv.imgcodecs.*;
+import org.opencv.videoio.*;
+
+import java.nio.*;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.core.Mat;
+import org.opencv.core.CvType;
+import org.opencv.core.Core;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferInt;
 
 import static org.opencv.core.CvType.CV_8UC1;
 
@@ -22,11 +37,11 @@ public class ComputerVision extends JPanel{
     public static void main(String[] args) throws InterruptedException {
 
         // Loading core libary to get accesses to the camera
-       // System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-        nu.pattern.OpenCV.loadShared();
+        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
         ComputerVision t = new ComputerVision();
 
         // Capturing from usb Camera
+        // USB CAM index 4 , own i 0
         VideoCapture camera = new VideoCapture(0);
         //camera.open("/dev/v41/by-id/usb-046d_Logitech_Webcam_C930e_DDCF656E-video-index0");
 
@@ -35,7 +50,7 @@ public class ComputerVision extends JPanel{
 
         // Show the mat frame
         System.out.println(frame.type());
-
+        camera.read(frame);
 
         if(!camera.isOpened()){
             System.out.println("Error");
@@ -46,45 +61,34 @@ public class ComputerVision extends JPanel{
 
                 if (camera.read(frame)){
 
-
                     //BufferedImage image = t.MatToBufferedImage(frame);
 
                     // New Picture
                     Mat tempImage = new Mat();
+
                     // Convert color
                     Imgproc.cvtColor(frame, tempImage,Imgproc.COLOR_BGR2GRAY);
-                    Imgproc.blur(tempImage, tempImage, new Size(11, 11));
+                    Imgproc.medianBlur(tempImage, tempImage, 15);
+                    //Imgproc.GaussianBlur(tempImage, tempImage, new Size(45,45),2,2);
+                    Core.normalize(tempImage,tempImage,50,200,Core.NORM_MINMAX, CV_8UC1);
+
 
                     // Use HoughCircels to mark the balls
                     Mat circles = new Mat();
-                    Imgproc.HoughCircles(tempImage, circles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows()/8, 25.0, 14.0, 15, 20);
+                    Imgproc.HoughCircles(tempImage, circles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows()/50, 80.0, 25.0, 10, 23);  // save values 50, 50, 25,10,23
 
                     for(int i = 0; i < circles.cols(); i++){
                         double[] c = circles.get(0, i);
                         Point center = new Point(Math.round(c[0]), Math.round(c[1]));
-                        Imgproc.circle(tempImage, center, 1, new Scalar(0, 100, 100), 2, 8, 0);
+                        Imgproc.circle(frame, center, 1, new Scalar(0, 100, 100), 3, 8, 0);
                         int radius = (int) Math.round(c[2]);
-                        Imgproc.circle(tempImage, center, radius, new Scalar(255, 0, 255), 2, 8, 0);
+                        Imgproc.circle(frame, center, radius, new Scalar(255, 0, 255), 3, 8, 0);
                     }
 
-                    HighGui.imshow("SHIET SON", tempImage);
+                    HighGui.imshow("SHIET SON", frame);
+                    HighGui.imshow("whatever", tempImage);
                     HighGui.waitKey(1);
 
-
-                    //BufferedImage image = t.MatToBufferedImage(circles);
-                    //t.window(image, "asdfasdf", 0,0);
-                    //frame.convertTo(tempImage, CV_8UC1, 1);
-                    //t.window(image, "Original Image", 0, 0);
-                    //saveImage(image);
-                    //t.window(t.grayscale(image), "Processed Image", 40, 60);
-                    //frame.convertTo(tempImage, CV_8UC1, 1.0/255, 0);
-                    /*BufferedImage image2 = t.MatToBufferedImage(tempImage);
-                    Mat two = new Mat();
-                    System.out.println(frame.type());
-                    System.out.println(tempImage.type());
-                    System.out.println(CV_8UC1);
-                    //tempImage.convertTo();
-                    Imgproc.HoughCircles(frame, two, Imgproc.HOUGH_GRADIENT, 1, 200);*/
 
                     if(frame.empty()){
                         System.out.println("1");
@@ -93,15 +97,15 @@ public class ComputerVision extends JPanel{
                         System.out.println("2");
                     }
 
-                    //t.window(t.loadImage("ImageName"), "Image loaded", 0, 0);
-                    //BufferedImage image2 = t.MatToBufferedImage(two);
-                    //saveImage(image2);
-                    //break;
+
+                    System.out.println("out1+ " + circles.cols());
                 }
 
 
             }
+
         }
+        System.out.println("out");
         camera.release();
     }
 
@@ -111,86 +115,5 @@ public class ComputerVision extends JPanel{
     }
 
     public ComputerVision() {
-    }
-
-    public ComputerVision(BufferedImage img) {
-        image = img;
-    }
-
-    //Show image on window
-    public void window(BufferedImage img, String text, int x, int y) {
-        JFrame frame0 = new JFrame();
-        frame0.getContentPane().add(new ComputerVision(img));
-        frame0.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame0.setTitle(text);
-        frame0.setSize(img.getWidth(), img.getHeight() + 30);
-        frame0.setLocation(x, y);
-        frame0.setVisible(true);
-    }
-
-    //Load an image
-    public BufferedImage loadImage(String file) {
-        BufferedImage img;
-
-        try {
-            File input = new File(file);
-            img = ImageIO.read(input);
-
-            return img;
-        } catch (Exception e) {
-            System.out.println("erro");
-        }
-
-        return null;
-    }
-    //Save an image
-    public static void saveImage(BufferedImage img) {
-        try {
-            File outputfile = new File("/home/dleh/A/new.png");
-            ImageIO.write(img, "png", outputfile);
-        } catch (Exception e) {
-            System.out.println("error");
-        }
-    }
-
-    //Grayscale filter
-    public BufferedImage grayscale(BufferedImage img) {
-        for (int i = 0; i < img.getHeight(); i++) {
-            for (int j = 0; j < img.getWidth(); j++) {
-                Color c = new Color(img.getRGB(j, i));
-
-                int red = (int) (c.getRed() * 0.299);
-                int green = (int) (c.getGreen() * 0.587);
-                int blue = (int) (c.getBlue() * 0.114);
-
-                Color newColor =
-                        new Color(
-                                red + green + blue,
-                                red + green + blue,
-                                red + green + blue);
-
-                img.setRGB(j, i, newColor.getRGB());
-            }
-        }
-
-        return img;
-    }
-
-    public BufferedImage MatToBufferedImage(Mat frame) {
-        //Mat() to BufferedImage
-
-        int type = 0;
-        if (frame.channels() == 1) {
-            type = BufferedImage.TYPE_BYTE_GRAY;
-        } else if (frame.channels() == 3) {
-            type = BufferedImage.TYPE_3BYTE_BGR;
-        }
-        BufferedImage image = new BufferedImage(frame.width(), frame.height(), type);
-        WritableRaster raster = image.getRaster();
-        DataBufferByte dataBuffer = (DataBufferByte) raster.getDataBuffer();
-        byte[] data = dataBuffer.getData();
-        frame.get(0, 0, data);
-
-        return image;
     }
 }
