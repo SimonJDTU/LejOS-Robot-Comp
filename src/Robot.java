@@ -7,9 +7,11 @@ import lejos.utility.Delay;
 public class Robot
 {
     private static EV3UltrasonicSensor UltrasonicSensor = new EV3UltrasonicSensor(SensorPort.S1);
+
+
     /**
-     * Makes the robot move forward using the motors at input A and B
-     * @param speed The speed at which the two motors move
+     * Makes the robot move forward using the motors at input A and B<br>
+     * @param speed The speed at which the two motors move<br>
      */
     public void MoveForwardAB(int speed)
     {
@@ -21,8 +23,8 @@ public class Robot
     }
 
     /**
-     * Moves the robot backwards using the motors at input A and B
-     * @param speed The speed at which the two motors move
+     * Moves the robot backwards using the motors at input A and B<br>
+     * @param speed The speed at which the two motors move<br>
      */
     public void MoveBackwardAB(int speed)
     {
@@ -34,12 +36,12 @@ public class Robot
     }
 
     /**
-     * Turns the robot clockwise using the motors at input A as the left motor and and B as the right motor.
-     * The robot turns for a set number of degrees.
-     * 90 degrees corresponds to an angle of 468,75
-     * 180 degrees corresponds to an angle of 937,5
-     * 270 degrees corresponds to an angle of 1406,25
-     * 360 degrees corresponds to an angle of 1875
+     * Turns the robot clockwise using the motors at input A as the left motor and and B as the right motor. <br>
+     * The robot turns for a set number of degrees. <br>
+     * 90 degrees corresponds to an angle of 468,75 <br>
+     * 180 degrees corresponds to an angle of 937,5 <br>
+     * 270 degrees corresponds to an angle of 1406,25 <br>
+     * 360 degrees corresponds to an angle of 1875 <br>
      * @param degrees The amount of degrees that the robot rotates
      */
     public void TurnClockwiseAB(int degrees)
@@ -52,12 +54,12 @@ public class Robot
     }
 
     /**
-     * Turns the robot counterclockwise using the motors at input A as the left motor and and B as the right motor.
-     * The robot turns for a set number of degrees.
-     * 90 degrees corresponds to an angle of 468,75
-     * 180 degrees corresponds to an angle of 937,5
-     * 270 degrees corresponds to an angle of 1406,25
-     * 360 degrees corresponds to an angle of 1875
+     * Turns the robot counterclockwise using the motors at input A as the left motor and and B as the right motor.<br>
+     * The robot turns for a set number of degrees.<br>
+     * 90 degrees corresponds to an angle of 468,75<br>
+     * 180 degrees corresponds to an angle of 937,5<br>
+     * 270 degrees corresponds to an angle of 1406,25<br>
+     * 360 degrees corresponds to an angle of 1875<br>
      * @param degrees The amount of degrees that the robot rotates
      */
     public void TurnCounterclockwiseAB(int degrees)
@@ -69,7 +71,7 @@ public class Robot
     }
 
     /**
-     * Uses the Ultrasonic Sensor to calculate the distance to the nearest object.
+     * Uses the Ultrasonic Sensor to calculate the distance to the nearest object.<br>
      * Returns infinite if it is either out of range or closer than 3cm otherwise returns in cm
      */
     public float DistanceToObstacleUS()
@@ -83,10 +85,10 @@ public class Robot
     }
 
     /**
-     * Method to capture the balls with the Motor D
-     * Makes the wheels spin inwards to capture the balls from the front of the robot
-     * Starts the motor and makes it turn at a certain speed given with the speed parameter
-     * @param speed The speed at which the motor D turns. Can be 0-900
+     * Method to capture the balls with the Motor D<br>
+     * Makes the wheels spin inwards to capture the balls from the front of the robot<br>
+     * Starts the motor and makes it turn at a certain speed given with the speed parameter<br>
+     * @param speed The speed at which the motor D turns. Can be 0-900<br>
      */
     public void CatchBalls(int speed)
     {
@@ -97,10 +99,10 @@ public class Robot
     }
 
     /**
-     * Method to capture the balls with the Motor D
-     * Makes the wheels spin outwards to release the balls from the front of the robot
-     * Starts the motor and makes it turn at a certain speed given with the speed parameter
-     * @param speed The speed at which the motor D turns. Can be 0-900
+     * Method to capture the balls with the Motor D<br>
+     * Makes the wheels spin outwards to release the balls from the front of the robot<br>
+     * Starts the motor and makes it turn at a certain speed given with the speed parameter<br>
+     * @param speed The speed at which the motor D turns. Can be 0-900<br>
      */
     public void ReleaseBalls(int speed)
     {
@@ -111,9 +113,9 @@ public class Robot
     }
 
     /**
-     * Stops the motor D and motor C which results in stopping the release of balls from the robot.
-     * Motor D handles the wheels in front of the robot that can push and pull the balls.
-     * Motor C handles the storage of the balls in the robot.
+     * Stops the motor D and motor C which results in stopping the release of balls from the robot.<br>
+     * Motor D handles the wheels in front of the robot that can push and pull the balls.<br>
+     * Motor C handles the storage of the balls in the robot.<br>
      */
     public void StopReleaseBalls()
     {
@@ -122,8 +124,8 @@ public class Robot
     }
 
     /**
-     * Stops the robots motors A and B which is used to move it forward and backwards.
-     * This stops the robot.
+     * Stops the robots motors A and B which is used to move it forward and backwards.<br>
+     * This stops the robot.<br>
      */
     public void StopRobotAB()
     {
@@ -148,18 +150,18 @@ public class Robot
     }
 
     /**
-     * Used to debug the storage of balls mechanism
-     * Moves the motor used in the ball storage mechanism forward which pushes out the balls
-     * @param degrees Moves motor used in the ball storage mechanism a certain amount of degrees
+     * Used to debug the storage of balls mechanism<br>
+     * Moves the motor used in the ball storage mechanism forward which pushes out the balls<br>
+     * @param degrees Moves motor used in the ball storage mechanism a certain amount of degrees<br>
      */
     public void MoveForwardC(int degrees)
     {
         Motor.C.rotate(degrees, false);
     }
     /**
-     * Used to debug the storage of balls mechanism
-     * Moves the motor used in the ball storage mechanism backwards which pulls in the balls
-     * @param degrees Moves motor used in the ball storage mechanism a certain amount of degrees
+     * Used to debug the storage of balls mechanism<br>
+     * Moves the motor used in the ball storage mechanism backwards which pulls in the balls<br>
+     * @param degrees Moves motor used in the ball storage mechanism a certain amount of degrees<br>
      */
     public void MoveBackwardC(int degrees)
     {

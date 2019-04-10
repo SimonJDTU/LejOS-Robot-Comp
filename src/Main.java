@@ -9,6 +9,7 @@ public class Main
         Robot robot = new Robot();
         robot.MoveForwardAB(900);
         robot.MoveBackwardD(900);
+        robot.TurnClockwiseAB(90);
         Button.waitForAnyPress();
     }
 }
