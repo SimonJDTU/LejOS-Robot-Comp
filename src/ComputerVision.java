@@ -16,6 +16,7 @@ import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import nu.pattern.OpenCV;
 import org.opencv.core.*;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.*;
@@ -38,12 +39,13 @@ public class ComputerVision extends JPanel{
     public static void main(String[] args) throws InterruptedException {
 
         // Loading core libary to get accesses to the camera
-        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-        ComputerVision t = new ComputerVision();
+        //System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+        //ComputerVision t = new ComputerVision();
+        OpenCV.loadLocally();
 
         // Capturing from usb Camera
         // USB CAM index 4 , own is 0
-        VideoCapture camera = new VideoCapture(4);
+        VideoCapture camera = new VideoCapture(0);
         //camera.open("/dev/v41/by-id/usb-046d_Logitech_Webcam_C930e_DDCF656E-video-index0");
 
         // New Mat frame
