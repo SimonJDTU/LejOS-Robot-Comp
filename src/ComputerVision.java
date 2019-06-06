@@ -16,7 +16,6 @@ import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import nu.pattern.OpenCV;
 import org.opencv.core.*;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.*;
@@ -27,6 +26,7 @@ import org.opencv.imgproc.Imgproc;
 import org.opencv.core.Mat;
 import org.opencv.core.CvType;
 import org.opencv.core.Core;
+import org.opencv.core.Scalar;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 
@@ -38,11 +38,12 @@ public class ComputerVision extends JPanel{
     public static void main(String[] args) throws InterruptedException {
 
         // Loading core libary to get accesses to the camera
-       //System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-        OpenCV.loadLocally();
+        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+        ComputerVision t = new ComputerVision();
+
         // Capturing from usb Camera
-        // USB CAM index 4 , own i 0
-        VideoCapture camera = new VideoCapture(0);
+        // USB CAM index 4 , own is 0
+        VideoCapture camera = new VideoCapture(4);
         //camera.open("/dev/v41/by-id/usb-046d_Logitech_Webcam_C930e_DDCF656E-video-index0");
 
         // New Mat frame
@@ -55,16 +56,19 @@ public class ComputerVision extends JPanel{
         if(!camera.isOpened()){
             System.out.println("Error");
         }
-        else {
-            int counter=0;
-            while(true){
+        else
+            {
+            while(true)
+            {
 
-                if (camera.read(frame)){
+                if (camera.read(frame))
+                {
 
                     //BufferedImage image = t.MatToBufferedImage(frame);
+
                     // New Picture
                     Mat tempImage = new Mat();
-
+                    Mat tempImage2 = new Mat();
                     // Convert color
                     Imgproc.cvtColor(frame, tempImage,Imgproc.COLOR_BGR2GRAY);
                     Imgproc.medianBlur(tempImage, tempImage, 15);
@@ -74,7 +78,10 @@ public class ComputerVision extends JPanel{
 
                     // Use HoughCircels to mark the balls
                     Mat circles = new Mat();
-                    Imgproc.HoughCircles(tempImage, circles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows()/50, 80, 25, 10, 25);  // save values 50, 50, 25,10,23
+                    Imgproc.HoughCircles(tempImage, circles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows()/50, 80.0, 25.0, 10, 23);  // save values 50, 50, 25,10,23
+
+
+                    //Core.inRange(tempImage,new Scalar(150,0,0) ,new Scalar(240,0,0),tempImage);
 
                     for(int i = 0; i < circles.cols(); i++){
                         double[] c = circles.get(0, i);
@@ -89,16 +96,17 @@ public class ComputerVision extends JPanel{
                     HighGui.waitKey(1);
 
 
-                    if(frame.empty()){
+                    if(frame.empty())
+                    {
                         System.out.println("1");
                     }
-                    if(frame.type() == CV_8UC1){
+                    if(frame.type() == CV_8UC1)
+                    {
                         System.out.println("2");
                     }
 
 
-                    if(circles.cols() > 0 )
-                        System.out.println("balls deteceted:" + circles.cols());
+                    System.out.println("out1+ " + circles.cols());
                 }
 
 
@@ -109,5 +117,12 @@ public class ComputerVision extends JPanel{
         camera.release();
     }
 
+    @Override
+    public void paint(Graphics g) {
+        g.drawImage(image, 0, 0, this);
+    }
 
+    public ComputerVision()
+    {
+    }
 }
