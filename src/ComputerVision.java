@@ -62,7 +62,6 @@ public class ComputerVision extends JPanel{
                 if (camera.read(frame)){
 
                     //BufferedImage image = t.MatToBufferedImage(frame);
-
                     // New Picture
                     Mat tempImage = new Mat();
 
@@ -75,7 +74,7 @@ public class ComputerVision extends JPanel{
 
                     // Use HoughCircels to mark the balls
                     Mat circles = new Mat();
-                    Imgproc.HoughCircles(tempImage, circles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows()/50, 80.0, 25.0, 10, 23);  // save values 50, 50, 25,10,23
+                    Imgproc.HoughCircles(tempImage, circles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows()/50, 80, 25, 10, 25);  // save values 50, 50, 25,10,23
 
                     for(int i = 0; i < circles.cols(); i++){
                         double[] c = circles.get(0, i);
@@ -98,7 +97,8 @@ public class ComputerVision extends JPanel{
                     }
 
 
-                    System.out.println("out1+ " + circles.cols());
+                    if(circles.cols() > 0 )
+                        System.out.println("balls deteceted:" + circles.cols());
                 }
 
 
@@ -109,11 +109,5 @@ public class ComputerVision extends JPanel{
         camera.release();
     }
 
-    @Override
-    public void paint(Graphics g) {
-        g.drawImage(image, 0, 0, this);
-    }
 
-    public ComputerVision() {
-    }
 }
