@@ -126,11 +126,10 @@ public class ComputerVision extends JPanel{
                         Imgproc.circle(frame, center, radius, new Scalar(255, 0, 255), 3, 8, 0);
                     }
 
-
-
+                    Point robot = new Point();
+                    Point goal = new Point();
                     combined = tempImage2;
                     //A.convertTo(A, CvType.CV_64FC3);
-
 
 
                     for (int i = 0; i<tempImage.rows(); i++) {
@@ -140,27 +139,39 @@ public class ComputerVision extends JPanel{
                            // pixels[0] = pixels[0];
                             //somePixes[0] = somePixes[0];
                             if(tempImage2.get(i,j)[0] == 255){
-                                combined.put(i,j,tempImage2.get(i,j)[0]);
+                                combined.put(i,j,tempImage2.get(i,j)[0]-1);
                             }
 
                             if (tempImage3.get(i,j)[0] == 255){
-                                combined.put(i,j,tempImage3.get(i,j)[0]);
+                                combined.put(i,j,tempImage3.get(i,j)[0]-2);
+                                goal = new Point(i,j);
                             }
 
                             if(tempImage4.get(i,j)[0] == 255){
-                                combined.put(i,j,tempImage4.get(i,j)[0]);
+                                combined.put(i,j,tempImage4.get(i,j)[0]-3);
                             }
                             if(tempImage5.get(i,j)[0]==255){
-                                combined.put(i,j,tempImage5.get(i,j)[0]);
+                                combined.put(i,j,tempImage5.get(i,j)[0]-4);
+                                robot = new Point(i,j);
                             }
                             if(tempImage6.get(i,j)[0] == 255){
-                                combined.put(i,j,tempImage6.get(i,j)[0]);
+                                combined.put(i,j,tempImage6.get(i,j)[0]-5);
                             }
+
+
+
+
+
+                            //System.out.println(dis);
 
                         }
 
                     }
+                    double dis;
 
+                    dis=Math.sqrt((goal.x-robot.x)*(goal.x-robot.x) + (goal.y-robot.y)*(goal.y-robot.y));
+
+                    System.out.println(dis);
 
 
                     //1
