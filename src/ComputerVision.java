@@ -51,7 +51,7 @@ public class ComputerVision extends JPanel{
 
         // Capturing from usb Camera
         // USB CAM index 4 , own is 0
-        VideoCapture camera = new VideoCapture(4);
+        VideoCapture camera = new VideoCapture(1);
         //camera.open("/dev/v41/by-id/usb-046d_Logitech_Webcam_C930e_DDCF656E-video-index0");
 
         // Set resulution
@@ -84,7 +84,7 @@ public class ComputerVision extends JPanel{
                     Mat tempImage4 = new Mat();
                     Mat tempImage5 = new Mat();
                     Mat tempImage6 = new Mat();
-
+                    Mat combined = new Mat();
 
                     // Convert color
                     Imgproc.cvtColor(frame, tempImage,Imgproc.COLOR_BGR2GRAY);
@@ -104,6 +104,7 @@ public class ComputerVision extends JPanel{
                     Imgproc.cvtColor(frame, tempImage5, COLOR_BGR2HSV);
                     Imgproc.cvtColor(frame, tempImage6, COLOR_BGR2HSV);
                     //Core.inRange(tempImage2,new Scalar(0,0,0),new Scalar(250,250,180),tempImage2);
+                    //borders
                     inRange(tempImage2,new Scalar(0,170,170) ,new Scalar(190,255,255),tempImage2);
 
                     //Goals
@@ -125,11 +126,56 @@ public class ComputerVision extends JPanel{
                         Imgproc.circle(frame, center, radius, new Scalar(255, 0, 255), 3, 8, 0);
                     }
 
+
+
+                    combined = tempImage2;
+                    //A.convertTo(A, CvType.CV_64FC3);
+
+
+
+                    for (int i = 0; i<tempImage.rows(); i++) {
+                        for(int j=0; j<tempImage.cols(); j++){
+                           // double[] pixels = tempImage5.get(i,j);
+                            //double[] somePixes = tempImage3.get(i,j);
+                           // pixels[0] = pixels[0];
+                            //somePixes[0] = somePixes[0];
+                            if(tempImage2.get(i,j)[0] == 255){
+                                combined.put(i,j,tempImage2.get(i,j)[0]);
+                            }
+
+                            if (tempImage3.get(i,j)[0] == 255){
+                                combined.put(i,j,tempImage3.get(i,j)[0]);
+                            }
+
+                            if(tempImage4.get(i,j)[0] == 255){
+                                combined.put(i,j,tempImage4.get(i,j)[0]);
+                            }
+                            if(tempImage5.get(i,j)[0]==255){
+                                combined.put(i,j,tempImage5.get(i,j)[0]);
+                            }
+                            if(tempImage6.get(i,j)[0] == 255){
+                                combined.put(i,j,tempImage6.get(i,j)[0]);
+                            }
+
+                        }
+
+                    }
+
+
+
+                    //1
+                    //2
+                    //4
+                    //8
+                    //16
+                    //32
+                    //64
+                    //128
                     //HighGui.imshow("SHIET SON", frame);
                     //HighGui.imshow("whatever", tempImage);
                     //HighGui.imshow("whatever2", tempImage2);
                     //HighGui.imshow("whatever3", tempImage3);
-                    //HighGui.imshow("whatever4", tempImage4);
+                    HighGui.imshow("whatever4", combined);
                     //HighGui.imshow("whatever5",tempImage5);
                     HighGui.waitKey(1);
 
@@ -144,7 +190,7 @@ public class ComputerVision extends JPanel{
                     }
 
 
-                    System.out.println("Circles:  " + circles.cols());
+                    //System.out.println("Circles:  " + circles.cols());
                 }
 
 
