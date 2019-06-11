@@ -34,6 +34,7 @@ import java.util.Vector;
 import static org.opencv.core.Core.inRange;
 import static org.opencv.core.CvType.CV_8UC1;
 import static org.opencv.imgproc.Imgproc.COLOR_BGR2HSV;
+import static org.opencv.imgproc.Imgproc.initUndistortRectifyMap;
 import static org.opencv.videoio.Videoio.CV_CAP_PROP_FRAME_HEIGHT;
 import static org.opencv.videoio.Videoio.CV_CAP_PROP_FRAME_WIDTH;
 
@@ -75,50 +76,51 @@ public class ComputerVision extends JPanel{
             {
 
             while(true) {
+                // New Picture
+                Mat tempImage = new Mat();
+                Mat tempImage1 = new Mat();
+                Mat tempImage2 = new Mat();
+                Mat tempImage3 = new Mat();
+                Mat tempImage4 = new Mat();
+                Mat tempImage5 = new Mat();
+                Mat tempImage6 = new Mat();
+                Mat tempImage7 = new Mat();
+                Mat combined = new Mat();
 
                     if (camera.read(frame)) {
 
-                        // New Picture
-                        Mat tempImage = new Mat();
-                        Mat tempImage2 = new Mat();
-                        Mat tempImage3 = new Mat();
-                        Mat tempImage4 = new Mat();
-                        Mat tempImage5 = new Mat();
-                        Mat tempImage6 = new Mat();
-                        Mat combined = new Mat();
+
 
                         // Convert color
-                        Imgproc.cvtColor(frame, tempImage, Imgproc.COLOR_BGR2GRAY);
+                        Imgproc.cvtColor(frame, tempImage,Imgproc.COLOR_BGR2GRAY);
                         Imgproc.medianBlur(tempImage, tempImage, 5);
-                        Core.normalize(tempImage, tempImage, 10, 200, Core.NORM_MINMAX, CV_8UC1);
+                        Core.normalize(tempImage,tempImage,10,200,Core.NORM_MINMAX, CV_8UC1);
 
 
                         // Use HoughCircels to mark the balls
                         Mat circles = new Mat();
 
-                        Imgproc.HoughCircles(tempImage, circles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows() / 100, 50.0, 19.0, 4, 9);  // save values 50, 50, 25,10,23
-
+                        Imgproc.HoughCircles(tempImage, circles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows()/100, 50.0, 19.0, 4, 9);  // save values 50, 50, 25,10,23
                         //New Mat to detect colors
-                        Imgproc.cvtColor(frame, tempImage2, COLOR_BGR2HSV);
-                        Imgproc.cvtColor(frame, tempImage3, COLOR_BGR2HSV);
-                        Imgproc.cvtColor(frame, tempImage4, COLOR_BGR2HSV);
-                        Imgproc.cvtColor(frame, tempImage5, COLOR_BGR2HSV);
+                        Imgproc.cvtColor(frame, tempImage1, COLOR_BGR2HSV);
+                        //Imgproc.medianBlur(tempImage, tempImage1, 15);
                         Imgproc.cvtColor(frame, tempImage6, COLOR_BGR2HSV);
+
                         //Core.inRange(tempImage2,new Scalar(0,0,0),new Scalar(250,250,180),tempImage2);
                         //borders
-                        inRange(tempImage2, new Scalar(0, 170, 170), new Scalar(190, 255, 255), tempImage2);
+                        inRange(tempImage1, new Scalar(0, 170, 170), new Scalar(190, 255, 255), tempImage2);
 
                         //Goals
-                        inRange(tempImage3, new Scalar(30, 40, 240), new Scalar(45, 60, 255), tempImage3);
+                        inRange(tempImage1, new Scalar(30, 40, 240), new Scalar(45, 60, 255), tempImage3);
 
 
-                        inRange(tempImage4, new Scalar(85, 20, 230), new Scalar(100, 40, 255), tempImage4);
+                        inRange(tempImage1, new Scalar(85, 20, 230), new Scalar(100, 40, 255), tempImage4);
 
                         //Robot
-                        //inRange(tempImage5, new Scalar(110, 90, 140), new Scalar(160, 140, 200), tempImage5);
+                        inRange(tempImage1,new Scalar(130,25,160),new Scalar(150,80,180),tempImage5);
 
 
-                        Core.inRange(tempImage6,new Scalar(45,100,10) ,new Scalar(75,255,255),tempImage6);
+                        inRange(tempImage1,new Scalar(70,190,135),new Scalar(90,220,150),tempImage6);
 
                         //System.out.println();
                         for (int i = 0; i < circles.cols(); i++) {
@@ -128,6 +130,7 @@ public class ComputerVision extends JPanel{
                             int radius = (int) Math.round(c[2]);
                             Imgproc.circle(frame, center, radius, new Scalar(255, 0, 255), 3, 8, 0);
                         }
+
 
                         Point robotFront = new Point();
                         Point robotBack = new Point();
@@ -165,6 +168,7 @@ public class ComputerVision extends JPanel{
                             }
 
                         }
+
                         double Robotangle;
                         double Goalangle;
                             vector[0] = robotBack.x-robotFront.x;
@@ -174,7 +178,10 @@ public class ComputerVision extends JPanel{
                             Robotangle = Math.toDegrees(Math.atan((vector[1])/(vector[0])));
                             //Goalangle = Math.toDegrees(Math.atan((vector[2])/vector[3]));
 
-                            Goalangle = Math.atan2(vector[0]*vector[3] - vector[1]*vector[2], vector[0]*vector[2] + vector[1]*vector[3]);
+                        Imgproc.line(frame, robotFront, robotBack, new Scalar(0,0,250), 5);
+
+                            Goalangle = Math.toDegrees(Math.cos((vector[0]*vector[3] - vector[1]*vector[2])/
+                                    (Math.abs(vector[0]*vector[2]) + Math.abs(vector[1]*vector[3]))));
 
                         double dis;
 
@@ -182,7 +189,7 @@ public class ComputerVision extends JPanel{
                         System.out.println(Goalangle + " - angle" );
                         System.out.println(dis + " - dist ");
 
-                        //HighGui.imshow("SHIET SON", frame);
+                        HighGui.imshow("SHIET SON", frame);
                        // HighGui.imshow("whatever", tempImage);
                         //HighGui.imshow("whatever2", tempImage2);
                         //HighGui.imshow("whatever3", tempImage3);
