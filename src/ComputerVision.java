@@ -1,6 +1,4 @@
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Image;
+import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
@@ -18,6 +16,7 @@ import javax.swing.*;
 
 import nu.pattern.OpenCV;
 import org.opencv.core.*;
+import org.opencv.core.Point;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.*;
 import org.opencv.videoio.*;
@@ -64,7 +63,7 @@ public class ComputerVision extends JPanel{
         Mat frame = new Mat();
 
 
-        double[] vector = new double[2];
+        double[] vector = new double[4];
         // Show the mat frame
         System.out.println(frame.type());
         camera.read(frame);
@@ -116,7 +115,7 @@ public class ComputerVision extends JPanel{
                         inRange(tempImage4, new Scalar(85, 20, 230), new Scalar(100, 40, 255), tempImage4);
 
                         //Robot
-                        inRange(tempImage5, new Scalar(110, 90, 140), new Scalar(160, 140, 200), tempImage5);
+                        //inRange(tempImage5, new Scalar(110, 90, 140), new Scalar(160, 140, 200), tempImage5);
 
 
                         Core.inRange(tempImage6,new Scalar(45,100,10) ,new Scalar(75,255,255),tempImage6);
@@ -166,19 +165,25 @@ public class ComputerVision extends JPanel{
                             }
 
                         }
-                        double angle;
+                        double Robotangle;
+                        double Goalangle;
                             vector[0] = robotBack.x-robotFront.x;
                             vector[1] = robotBack.y-robotFront.y;
+                            vector[2] = robotBack.x-goal.x;
+                            vector[3] = robotBack.y-goal.y;
+                            Robotangle = Math.toDegrees(Math.atan((vector[1])/(vector[0])));
+                            //Goalangle = Math.toDegrees(Math.atan((vector[2])/vector[3]));
 
-                            angle = Math.toDegrees(Math.atan((vector[1])/(vector[0])));
+                            Goalangle = Math.atan2(vector[0]*vector[3] - vector[1]*vector[2], vector[0]*vector[2] + vector[1]*vector[3]);
+
                         double dis;
 
                         dis = Math.sqrt((Math.pow(goal.x - robotFront.x, 2)) + (Math.pow(goal.y - robotFront.y, 2)));
-                        System.out.println(angle + " - angle" );
+                        System.out.println(Goalangle + " - angle" );
                         System.out.println(dis + " - dist ");
 
                         //HighGui.imshow("SHIET SON", frame);
-                        //HighGui.imshow("whatever", tempImage);
+                       // HighGui.imshow("whatever", tempImage);
                         //HighGui.imshow("whatever2", tempImage2);
                         //HighGui.imshow("whatever3", tempImage3);
                         HighGui.imshow("whatever4", combined);
