@@ -11,10 +11,10 @@ import java.io.File;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-
+import java.util.ArrayList;
+import java.util.Timer;
 import javax.imageio.ImageIO;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
+import javax.swing.*;
 
 import nu.pattern.OpenCV;
 import org.opencv.core.*;
@@ -30,6 +30,7 @@ import org.opencv.core.Core;
 import org.opencv.core.Scalar;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
+import java.util.Vector;
 
 import static org.opencv.core.Core.inRange;
 import static org.opencv.core.CvType.CV_8UC1;
@@ -62,6 +63,8 @@ public class ComputerVision extends JPanel{
         // New Mat frame
         Mat frame = new Mat();
 
+
+        double[] vector = new double[2];
         // Show the mat frame
         System.out.println(frame.type());
         camera.read(frame);
@@ -71,138 +74,127 @@ public class ComputerVision extends JPanel{
         }
         else
             {
-            while(true)
-            {
 
-                if (camera.read(frame))
-                {
+            while(true) {
 
-                    // New Picture
-                    Mat tempImage = new Mat();
-                    Mat tempImage2 = new Mat();
-                    Mat tempImage3 = new Mat();
-                    Mat tempImage4 = new Mat();
-                    Mat tempImage5 = new Mat();
-                    Mat tempImage6 = new Mat();
-                    Mat combined = new Mat();
+                    if (camera.read(frame)) {
 
-                    // Convert color
-                    Imgproc.cvtColor(frame, tempImage,Imgproc.COLOR_BGR2GRAY);
-                    Imgproc.medianBlur(tempImage, tempImage, 5);
-                    Core.normalize(tempImage,tempImage,10,200,Core.NORM_MINMAX, CV_8UC1);
+                        // New Picture
+                        Mat tempImage = new Mat();
+                        Mat tempImage2 = new Mat();
+                        Mat tempImage3 = new Mat();
+                        Mat tempImage4 = new Mat();
+                        Mat tempImage5 = new Mat();
+                        Mat tempImage6 = new Mat();
+                        Mat combined = new Mat();
 
-
-                    // Use HoughCircels to mark the balls
-                    Mat circles = new Mat();
-
-                    Imgproc.HoughCircles(tempImage, circles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows()/100, 50.0, 19.0, 4, 9);  // save values 50, 50, 25,10,23
-
-                    //New Mat to detect colors
-                    Imgproc.cvtColor(frame, tempImage2, COLOR_BGR2HSV);
-                    Imgproc.cvtColor(frame, tempImage3, COLOR_BGR2HSV);
-                    Imgproc.cvtColor(frame, tempImage4, COLOR_BGR2HSV);
-                    Imgproc.cvtColor(frame, tempImage5, COLOR_BGR2HSV);
-                    Imgproc.cvtColor(frame, tempImage6, COLOR_BGR2HSV);
-                    //Core.inRange(tempImage2,new Scalar(0,0,0),new Scalar(250,250,180),tempImage2);
-                    //borders
-                    inRange(tempImage2,new Scalar(0,170,170) ,new Scalar(190,255,255),tempImage2);
-
-                    //Goals
-                    inRange(tempImage3,new Scalar(30,40,240) ,new Scalar(45,60,255),tempImage3);
-                    
-
-                    inRange(tempImage4,new Scalar(85,20,230) ,new Scalar(100,40,255),tempImage4);
-
-                    //Robot
-                    Core.inRange(tempImage5,new Scalar(120,100,150),new Scalar(135,125,180),tempImage5);
+                        // Convert color
+                        Imgproc.cvtColor(frame, tempImage, Imgproc.COLOR_BGR2GRAY);
+                        Imgproc.medianBlur(tempImage, tempImage, 5);
+                        Core.normalize(tempImage, tempImage, 10, 200, Core.NORM_MINMAX, CV_8UC1);
 
 
-                    //System.out.println();
-                    for(int i = 0; i < circles.cols(); i++){
-                        double[] c = circles.get(0, i);
-                        Point center = new Point(Math.round(c[0]), Math.round(c[1]));
-                        Imgproc.circle(frame, center, 1, new Scalar(0, 100, 100), 3, 8, 0);
-                        int radius = (int) Math.round(c[2]);
-                        Imgproc.circle(frame, center, radius, new Scalar(255, 0, 255), 3, 8, 0);
-                    }
+                        // Use HoughCircels to mark the balls
+                        Mat circles = new Mat();
 
-                    Point robot = new Point();
-                    Point goal = new Point();
-                    combined = tempImage2;
-                    //A.convertTo(A, CvType.CV_64FC3);
+                        Imgproc.HoughCircles(tempImage, circles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows() / 100, 50.0, 19.0, 4, 9);  // save values 50, 50, 25,10,23
 
+                        //New Mat to detect colors
+                        Imgproc.cvtColor(frame, tempImage2, COLOR_BGR2HSV);
+                        Imgproc.cvtColor(frame, tempImage3, COLOR_BGR2HSV);
+                        Imgproc.cvtColor(frame, tempImage4, COLOR_BGR2HSV);
+                        Imgproc.cvtColor(frame, tempImage5, COLOR_BGR2HSV);
+                        Imgproc.cvtColor(frame, tempImage6, COLOR_BGR2HSV);
+                        //Core.inRange(tempImage2,new Scalar(0,0,0),new Scalar(250,250,180),tempImage2);
+                        //borders
+                        inRange(tempImage2, new Scalar(0, 170, 170), new Scalar(190, 255, 255), tempImage2);
 
-                    for (int i = 0; i<tempImage.rows(); i++) {
-                        for(int j=0; j<tempImage.cols(); j++){
-                           // double[] pixels = tempImage5.get(i,j);
-                            //double[] somePixes = tempImage3.get(i,j);
-                           // pixels[0] = pixels[0];
-                            //somePixes[0] = somePixes[0];
-                            if(tempImage2.get(i,j)[0] == 255){
-                                combined.put(i,j,tempImage2.get(i,j)[0]-1);
-                            }
-
-                            if (tempImage3.get(i,j)[0] == 255){
-                                combined.put(i,j,tempImage3.get(i,j)[0]-2);
-                                goal = new Point(i,j);
-                            }
-
-                            if(tempImage4.get(i,j)[0] == 255){
-                                combined.put(i,j,tempImage4.get(i,j)[0]-3);
-                            }
-                            if(tempImage5.get(i,j)[0]==255){
-                                combined.put(i,j,tempImage5.get(i,j)[0]-4);
-                                robot = new Point(i,j);
-                            }
-                            if(tempImage6.get(i,j)[0] == 255){
-                                combined.put(i,j,tempImage6.get(i,j)[0]-5);
-                            }
+                        //Goals
+                        inRange(tempImage3, new Scalar(30, 40, 240), new Scalar(45, 60, 255), tempImage3);
 
 
+                        inRange(tempImage4, new Scalar(85, 20, 230), new Scalar(100, 40, 255), tempImage4);
+
+                        //Robot
+                        inRange(tempImage5, new Scalar(110, 90, 140), new Scalar(160, 140, 200), tempImage5);
 
 
+                        Core.inRange(tempImage6,new Scalar(45,100,10) ,new Scalar(75,255,255),tempImage6);
 
-                            //System.out.println(dis);
-
+                        //System.out.println();
+                        for (int i = 0; i < circles.cols(); i++) {
+                            double[] c = circles.get(0, i);
+                            Point center = new Point(Math.round(c[0]), Math.round(c[1]));
+                            Imgproc.circle(frame, center, 1, new Scalar(0, 100, 100), 3, 8, 0);
+                            int radius = (int) Math.round(c[2]);
+                            Imgproc.circle(frame, center, radius, new Scalar(255, 0, 255), 3, 8, 0);
                         }
 
+                        Point robotFront = new Point();
+                        Point robotBack = new Point();
+                        Point goal = new Point();
+                        Point goal2 = new Point();
+                        Point borders = new Point();
+                        combined = tempImage2;
+
+                        for (int i = 0; i < tempImage.rows(); i++) {
+                            for (int j = 0; j < tempImage.cols(); j++) {
+
+                                if (tempImage2.get(i, j)[0] == 255) {
+                                    combined.put(i, j, tempImage2.get(i, j)[0] - 1);
+                                    borders = new Point(i,j);
+                                }
+
+                                if (tempImage3.get(i, j)[0] == 255) {
+                                    combined.put(i, j, tempImage3.get(i, j)[0] - 2);
+                                    goal = new Point(i, j);
+                                }
+
+                                if (tempImage4.get(i, j)[0] == 255) {
+                                    combined.put(i, j, tempImage4.get(i, j)[0] - 3);
+                                    goal2 = new Point(i,j);
+                                }
+                                if (tempImage5.get(i, j)[0] == 255) {
+                                    combined.put(i, j, tempImage5.get(i, j)[0] - 4);
+                                    robotFront = new Point(i, j);
+                                }
+                                if (tempImage6.get(i, j)[0] == 255) {
+                                    combined.put(i, j, tempImage6.get(i, j)[0] - 5);
+                                    robotBack = new Point(i,j);
+                                }
+
+                            }
+
+                        }
+                        double angle;
+                            vector[0] = robotBack.x-robotFront.x;
+                            vector[1] = robotBack.y-robotFront.y;
+
+                            angle = Math.toDegrees(Math.atan((vector[1])/(vector[0])));
+                        double dis;
+
+                        dis = Math.sqrt((Math.pow(goal.x - robotFront.x, 2)) + (Math.pow(goal.y - robotFront.y, 2)));
+                        System.out.println(angle + " - angle" );
+                        System.out.println(dis + " - dist ");
+
+                        //HighGui.imshow("SHIET SON", frame);
+                        //HighGui.imshow("whatever", tempImage);
+                        //HighGui.imshow("whatever2", tempImage2);
+                        //HighGui.imshow("whatever3", tempImage3);
+                        HighGui.imshow("whatever4", combined);
+                        //HighGui.imshow("whatever5",tempImage5);
+                        HighGui.waitKey(1);
+
+
+                        if (frame.empty()) {
+                            System.out.println("1");
+                        }
+                        if (frame.type() == CV_8UC1) {
+                            System.out.println("2");
+                        }
+
+
                     }
-                    double dis;
-
-                    dis=Math.sqrt((goal.x-robot.x)*(goal.x-robot.x) + (goal.y-robot.y)*(goal.y-robot.y));
-
-                    System.out.println(dis);
-
-
-                    //1
-                    //2
-                    //4
-                    //8
-                    //16
-                    //32
-                    //64
-                    //128
-                    //HighGui.imshow("SHIET SON", frame);
-                    //HighGui.imshow("whatever", tempImage);
-                    //HighGui.imshow("whatever2", tempImage2);
-                    //HighGui.imshow("whatever3", tempImage3);
-                    HighGui.imshow("whatever4", combined);
-                    //HighGui.imshow("whatever5",tempImage5);
-                    HighGui.waitKey(1);
-
-
-                    if(frame.empty())
-                    {
-                        System.out.println("1");
-                    }
-                    if(frame.type() == CV_8UC1)
-                    {
-                        System.out.println("2");
-                    }
-
-
-                    //System.out.println("Circles:  " + circles.cols());
-                }
 
 
             }
@@ -215,9 +207,5 @@ public class ComputerVision extends JPanel{
     @Override
     public void paint(Graphics g) {
         g.drawImage(image, 0, 0, this);
-    }
-
-    public ComputerVision()
-    {
     }
 }
