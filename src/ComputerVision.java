@@ -54,7 +54,7 @@ public class ComputerVision extends JPanel{
 
         // Capturing from usb Camera
         // USB CAM index 4 , own is 0
-        VideoCapture camera = new VideoCapture(1);
+        VideoCapture camera = new VideoCapture(4);
         //camera.open("/dev/v41/by-id/usb-046d_Logitech_Webcam_C930e_DDCF656E-video-index0");
 
         // Set resulution
@@ -86,7 +86,7 @@ public class ComputerVision extends JPanel{
                 Mat tempImage4 = new Mat();
                 Mat tempImage5 = new Mat();
                 Mat tempImage6 = new Mat();
-                Mat tempImage7 = new Mat();
+                Mat v   = new Mat();
                 Mat combined = new Mat();
 
                     if (camera.read(frame)) {
@@ -101,11 +101,17 @@ public class ComputerVision extends JPanel{
 
                         // Use HoughCircels to mark the balls
                         Mat circles = new Mat();
+                        Mat fromtcircles = new Mat();
+                        Mat backcircles = new Mat();
 
                         Imgproc.HoughCircles(tempImage, circles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows()/100, 50.0, 19.0, 4, 9);  // save values 50, 50, 25,10,23
+                        Imgproc.HoughCircles(tempImage, fromtcircles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows()/100, 50.0, 19.0, 10, 14);  // save values 50, 50, 25,10,23
+                        Imgproc.HoughCircles(tempImage, backcircles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows()/100, 50.0, 19.0, 15, 30);  // save values 50, 50, 25,10,23
+
                         //New Mat to detect colors
                         Imgproc.cvtColor(frame, tempImage1, COLOR_BGR2HSV);
                         Core.normalize(tempImage,tempImage1,10,200,Core.NORM_MINMAX, CV_8UC1);
+                        Imgproc.cvtColor(frame, tempImage6, COLOR_BGR2HSV);
                         Imgproc.cvtColor(frame, tempImage6, COLOR_BGR2HSV);
 
                         HighGui.imshow("whatever2", tempImage1);
@@ -119,15 +125,31 @@ public class ComputerVision extends JPanel{
 
                         inRange(tempImage1, new Scalar(85, 20, 230), new Scalar(100, 40, 255), tempImage4);
 
-                        //Robot green
+                        //Robot
+
+                        // GREEN
                         inRange(tempImage1,new Scalar(40,20,170),new Scalar(65,45,200),tempImage5);
 
-                        // vialoet
+                        // VIOLET
                         inRange(tempImage1,new Scalar(155,55,229),new Scalar(160,65,239),tempImage6);
 
-                        //System.out.println();
+                        //Colorize circels
                         for (int i = 0; i < circles.cols(); i++) {
                             double[] c = circles.get(0, i);
+                            Point center = new Point(Math.round(c[0]), Math.round(c[1]));
+                            Imgproc.circle(frame, center, 1, new Scalar(0, 100, 100), 3, 8, 0);
+                            int radius = (int) Math.round(c[2]);
+                            Imgproc.circle(frame, center, radius, new Scalar(255, 0, 255), 3, 8, 0);
+                        }
+                        for (int i = 0; i < backcircles.cols(); i++) {
+                            double[] c = backcircles.get(0, i);
+                            Point center = new Point(Math.round(c[0]), Math.round(c[1]));
+                            Imgproc.circle(frame, center, 1, new Scalar(0, 100, 100), 3, 8, 0);
+                            int radius = (int) Math.round(c[2]);
+                            Imgproc.circle(frame, center, radius, new Scalar(255, 0, 255), 3, 8, 0);
+                        }
+                        for (int i = 0; i < fromtcircles.cols(); i++) {
+                            double[] c = fromtcircles.get(0, i);
                             Point center = new Point(Math.round(c[0]), Math.round(c[1]));
                             Imgproc.circle(frame, center, 1, new Scalar(0, 100, 100), 3, 8, 0);
                             int radius = (int) Math.round(c[2]);
