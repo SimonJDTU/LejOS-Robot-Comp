@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.text.ParsePosition;
 import java.util.ArrayList;
 import java.util.Timer;
 import javax.imageio.ImageIO;
@@ -31,6 +32,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.util.Vector;
 
+import static org.opencv.core.Core.StsOutOfRange;
 import static org.opencv.core.Core.inRange;
 import static org.opencv.core.CvType.CV_8UC1;
 import static org.opencv.imgproc.Imgproc.COLOR_BGR2HSV;
@@ -63,7 +65,7 @@ public class ComputerVision extends JPanel{
         // New Mat frame
         Mat frame = new Mat();
 
-
+        ArrayList<Double> avgPoints = new ArrayList<Double>();
         double[] vector = new double[4];
         // Show the mat frame
         System.out.println(frame.type());
@@ -103,9 +105,10 @@ public class ComputerVision extends JPanel{
                         Imgproc.HoughCircles(tempImage, circles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows()/100, 50.0, 19.0, 4, 9);  // save values 50, 50, 25,10,23
                         //New Mat to detect colors
                         Imgproc.cvtColor(frame, tempImage1, COLOR_BGR2HSV);
-                        //Imgproc.medianBlur(tempImage, tempImage1, 15);
+                        Core.normalize(tempImage,tempImage1,10,200,Core.NORM_MINMAX, CV_8UC1);
                         Imgproc.cvtColor(frame, tempImage6, COLOR_BGR2HSV);
 
+                        HighGui.imshow("whatever2", tempImage1);
                         //Core.inRange(tempImage2,new Scalar(0,0,0),new Scalar(250,250,180),tempImage2);
                         //borders
                         inRange(tempImage1, new Scalar(0, 170, 170), new Scalar(190, 255, 255), tempImage2);
@@ -116,11 +119,11 @@ public class ComputerVision extends JPanel{
 
                         inRange(tempImage1, new Scalar(85, 20, 230), new Scalar(100, 40, 255), tempImage4);
 
-                        //Robot
-                        inRange(tempImage1,new Scalar(130,25,160),new Scalar(150,80,180),tempImage5);
+                        //Robot green
+                        inRange(tempImage1,new Scalar(40,20,170),new Scalar(65,45,200),tempImage5);
 
-
-                        inRange(tempImage1,new Scalar(70,190,135),new Scalar(90,220,150),tempImage6);
+                        // vialoet
+                        inRange(tempImage1,new Scalar(155,55,229),new Scalar(160,65,239),tempImage6);
 
                         //System.out.println();
                         for (int i = 0; i < circles.cols(); i++) {
@@ -131,7 +134,12 @@ public class ComputerVision extends JPanel{
                             Imgproc.circle(frame, center, radius, new Scalar(255, 0, 255), 3, 8, 0);
                         }
 
-
+                        ArrayList<Point> avgRobotFront = new ArrayList<Point>();
+                        final ArrayList<Point> avgRobotBack = new ArrayList<Point>();
+                        int frontCoutner = 0;
+                        int BackCounter = 0;
+                        Point frontSum = new Point();
+                        Point backSum = new Point();
                         Point robotFront = new Point();
                         Point robotBack = new Point();
                         Point goal = new Point();
@@ -144,54 +152,74 @@ public class ComputerVision extends JPanel{
 
                                 if (tempImage2.get(i, j)[0] == 255) {
                                     combined.put(i, j, tempImage2.get(i, j)[0] - 1);
-                                    borders = new Point(i,j);
+                                    borders = new Point(j,i);
                                 }
 
                                 if (tempImage3.get(i, j)[0] == 255) {
                                     combined.put(i, j, tempImage3.get(i, j)[0] - 2);
-                                    goal = new Point(i, j);
+                                    goal = new Point(j, i);
+
                                 }
 
                                 if (tempImage4.get(i, j)[0] == 255) {
                                     combined.put(i, j, tempImage4.get(i, j)[0] - 3);
-                                    goal2 = new Point(i,j);
+                                    goal2 = new Point(j,i);
                                 }
                                 if (tempImage5.get(i, j)[0] == 255) {
                                     combined.put(i, j, tempImage5.get(i, j)[0] - 4);
-                                    robotFront = new Point(i, j);
+                                    avgRobotBack.add(new Point(j, i));
+
                                 }
                                 if (tempImage6.get(i, j)[0] == 255) {
                                     combined.put(i, j, tempImage6.get(i, j)[0] - 5);
-                                    robotBack = new Point(i,j);
+                                    avgRobotFront.add(new Point(j,i));
+
                                 }
+
 
                             }
 
+
                         }
+
+                        for(Point p: avgRobotFront){
+                            frontSum.x += p.x;
+                            frontSum.y += p.y;
+                        }
+                        robotFront.x = frontSum.x/avgRobotFront.size();
+                        robotFront.y = frontSum.y/avgRobotFront.size();
+                        for (Point p: avgRobotBack){
+                            backSum.x = p.x;
+                            backSum.y = p.y;
+                        }
+                        robotBack.x = backSum.x/avgRobotBack.size();
+                        robotBack.y = backSum.y/avgRobotBack.size();
 
                         double Robotangle;
                         double Goalangle;
+                        double dis;
                             vector[0] = robotBack.x-robotFront.x;
                             vector[1] = robotBack.y-robotFront.y;
                             vector[2] = robotBack.x-goal.x;
                             vector[3] = robotBack.y-goal.y;
                             Robotangle = Math.toDegrees(Math.atan((vector[1])/(vector[0])));
                             //Goalangle = Math.toDegrees(Math.atan((vector[2])/vector[3]));
-
-                        Imgproc.line(frame, robotFront, robotBack, new Scalar(0,0,250), 5);
+                        System.out.println("back:"+robotBack +"\n "+"front:"+robotFront);
+                        dis = Math.sqrt(Math.pow(goal.x - robotFront.x, 2) + Math.pow(goal.y - robotFront.y, 2));
+                        Imgproc.line(frame, new Point(robotFront.x, robotFront.y), new Point(robotBack.x, robotBack.y), new Scalar(0,0,250), 5);
 
                             Goalangle = Math.toDegrees(Math.cos((vector[0]*vector[3] - vector[1]*vector[2])/
                                     (Math.abs(vector[0]*vector[2]) + Math.abs(vector[1]*vector[3]))));
 
-                        double dis;
 
-                        dis = Math.sqrt((Math.pow(goal.x - robotFront.x, 2)) + (Math.pow(goal.y - robotFront.y, 2)));
+
                         System.out.println(Goalangle + " - angle" );
                         System.out.println(dis + " - dist ");
 
+
                         HighGui.imshow("SHIET SON", frame);
                        // HighGui.imshow("whatever", tempImage);
-                        //HighGui.imshow("whatever2", tempImage2);
+
                         //HighGui.imshow("whatever3", tempImage3);
                         HighGui.imshow("whatever4", combined);
                         //HighGui.imshow("whatever5",tempImage5);
