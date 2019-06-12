@@ -1,5 +1,13 @@
+import lejos.hardware.Brick;
 import lejos.hardware.Button;
+import lejos.hardware.Sound;
 import lejos.utility.Delay;
+import lejos.utility.Stopwatch;
+import lejos.utility.Timer;
+
+import java.io.File;
+import java.net.URISyntaxException;
+import java.net.URL;
 
 public class Main
 {
@@ -38,16 +46,15 @@ robot.ReleaseBallsD();
 Delay.msDelay(5000);
 robot.StopReleaseBalls();*/
 
+       // Server server = new Server(5000);
         Robot robot = new Robot();
-        robot.CaptureBallsD();
-        robot.MoveDistanceForwardAB(50);
-        robot.TurnCounterclockwiseAB(90);
-        robot.MoveDistanceForwardAB(50);
-        robot.TurnCounterclockwiseAB(90);
-        robot.MoveDistanceForwardAB(50);
-        robot.TurnCounterclockwiseAB(90);
-        robot.MoveDistanceForwardAB(50);
-        robot.TurnCounterclockwiseAB(90);
+        //robot.ReleaseBallsD();
+        robot.ThrowBallsC(3);
+        //robot.StoreBallsC(3);
+        Button.waitForAnyPress();
+
+
+
 
 /*        Robot robot = new Robot();
         robot.MoveDistanceForwardAB(200);*/

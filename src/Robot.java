@@ -1,3 +1,4 @@
+import lejos.hardware.Sound;
 import lejos.hardware.motor.Motor;
 import lejos.utility.Delay;
 
@@ -41,7 +42,16 @@ public class Robot
         Motor.B.setSpeed(600);
         int rotation = (int) (distance * 35.34);
         Motor.A.rotate(rotation, true);
-        Motor.B.rotate(rotation, false);
+        Motor.B.rotate(rotation, true);
+    }
+
+    public void MoveDistanceForwardAB(int distance, int speed)
+    {
+        Motor.A.setSpeed(speed);
+        Motor.B.setSpeed(speed);
+        int rotation = (int) (distance * 35.34);
+        Motor.A.rotate(rotation, true);
+        Motor.B.rotate(rotation, true);
     }
 
     public void MoveDistanceBackwardsAB(int distance)
@@ -62,7 +72,7 @@ public class Robot
         int  angle = (int) (degrees * 4.94);
         System.out.println("Angle is " + angle);
         Motor.A.rotate(-angle, true);
-        Motor.B.rotate(angle, false);
+        Motor.B.rotate(angle, true);
     }
 
     /**
@@ -74,10 +84,10 @@ public class Robot
     {
         Motor.A.setSpeed(200);
         Motor.B.setSpeed(200);
-        int  angle = (int) (degrees * 4.70);
+        int  angle = (int) (degrees * 4.94);
         System.out.println("Angle is " + angle);
         Motor.B.rotate(-angle, true);
-        Motor.A.rotate(angle, false);
+        Motor.A.rotate(angle, true);
     }
 
     public void TurnClockwiseAB()
@@ -108,22 +118,24 @@ public class Robot
      */
     public void CaptureBallsD()
     {
-        Motor.D.setSpeed(300);
+        Motor.D.setSpeed(500);
         Motor.D.backward();
     }
 
     public void StoreBallsC(int amount)
     {
-        Motor.C.rotate(-amount*1500,false);
+        Motor.C.setSpeed(Motor.C.getMaxSpeed());
+        Motor.C.rotate(-amount*1200,true);
     }
     public void ThrowBallsC(int amount)
     {
-        Motor.C.rotate(amount*1500, false);
+        Motor.C.setSpeed(Motor.C.getMaxSpeed());
+        Motor.C.rotate(amount*1500, true);
     }
 
     public void ReleaseBallsD()
     {
-        Motor.D.setSpeed(300);
+        Motor.D.setSpeed(Motor.D.getMaxSpeed());
         Motor.D.forward();
     }
 
@@ -136,5 +148,15 @@ public class Robot
     {
         Motor.A.stop(true);
         Motor.B.stop(true);
+    }
+    public void StopRobotD()
+    {
+        Motor.D.stop(true);
+    }
+
+    public void playSound()
+    {
+        Sound.setVolume(100);
+        Sound.beepSequenceUp();
     }
 }
