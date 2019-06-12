@@ -35,8 +35,7 @@ import java.util.Vector;
 import static org.opencv.core.Core.StsOutOfRange;
 import static org.opencv.core.Core.inRange;
 import static org.opencv.core.CvType.CV_8UC1;
-import static org.opencv.imgproc.Imgproc.COLOR_BGR2HSV;
-import static org.opencv.imgproc.Imgproc.initUndistortRectifyMap;
+import static org.opencv.imgproc.Imgproc.*;
 import static org.opencv.videoio.Videoio.CV_CAP_PROP_FRAME_HEIGHT;
 import static org.opencv.videoio.Videoio.CV_CAP_PROP_FRAME_WIDTH;
 
@@ -86,8 +85,10 @@ public class ComputerVision extends JPanel{
                 Mat tempImage4 = new Mat();
                 Mat tempImage5 = new Mat();
                 Mat tempImage6 = new Mat();
+                Mat tempImage7 = new Mat();
                 Mat v   = new Mat();
                 Mat combined = new Mat();
+                Mat fame = frame;
 
                     if (camera.read(frame)) {
 
@@ -106,16 +107,17 @@ public class ComputerVision extends JPanel{
 
                         Imgproc.HoughCircles(tempImage, circles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows()/100, 50.0, 19.0, 4, 9);  // save values 50, 50, 25,10,23
                         Imgproc.HoughCircles(tempImage, fromtcircles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows()/100, 50.0, 19.0, 10, 14);  // save values 50, 50, 25,10,23
-                        Imgproc.HoughCircles(tempImage, backcircles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows()/100, 50.0, 19.0, 15, 30);  // save values 50, 50, 25,10,23
+                        Imgproc.HoughCircles(tempImage, backcircles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows()/100, 50.0, 19.0, 13, 25);  // save values 50, 50, 25,10,23
 
                         //New Mat to detect colors
                         Imgproc.cvtColor(frame, tempImage1, COLOR_BGR2HSV);
                         Core.normalize(tempImage,tempImage1,10,200,Core.NORM_MINMAX, CV_8UC1);
                         Imgproc.cvtColor(frame, tempImage6, COLOR_BGR2HSV);
-                        Imgproc.cvtColor(frame, tempImage6, COLOR_BGR2HSV);
+                        Imgproc.cvtColor(frame, tempImage7, COLOR_BGR2HSV);
+                        Core.normalize(tempImage7,tempImage1,10,180,Core.NORM_MINMAX, CV_8UC1);
 
-                        HighGui.imshow("whatever2", tempImage1);
-                        //Core.inRange(tempImage2,new Scalar(0,0,0),new Scalar(250,250,180),tempImage2);
+                        //HighGui.imshow("whatever2", tempImage1);
+                        //Core.inRange(tempImage2,new Scalar(0,070),new Scalar(250,250,180),tempImage2);
                         //borders
                         inRange(tempImage1, new Scalar(0, 170, 170), new Scalar(190, 255, 255), tempImage2);
 
@@ -131,7 +133,8 @@ public class ComputerVision extends JPanel{
                         inRange(tempImage1,new Scalar(40,20,170),new Scalar(65,45,200),tempImage5);
 
                         // VIOLET
-                        inRange(tempImage1,new Scalar(155,55,229),new Scalar(160,65,239),tempImage6);
+                        Core.normalize(frame,fame,10,200,Core.NORM_MINMAX,CV_8UC1);
+                        inRange(fame,new Scalar(80,180,130),new Scalar(110,180,145),tempImage6);
 
                         //Colorize circels
                         for (int i = 0; i < circles.cols(); i++) {
@@ -141,19 +144,16 @@ public class ComputerVision extends JPanel{
                             int radius = (int) Math.round(c[2]);
                             Imgproc.circle(frame, center, radius, new Scalar(255, 0, 255), 3, 8, 0);
                         }
+
                         for (int i = 0; i < backcircles.cols(); i++) {
                             double[] c = backcircles.get(0, i);
                             Point center = new Point(Math.round(c[0]), Math.round(c[1]));
                             Imgproc.circle(frame, center, 1, new Scalar(0, 100, 100), 3, 8, 0);
-                            int radius = (int) Math.round(c[2]);
-                            Imgproc.circle(frame, center, radius, new Scalar(255, 0, 255), 3, 8, 0);
                         }
                         for (int i = 0; i < fromtcircles.cols(); i++) {
                             double[] c = fromtcircles.get(0, i);
                             Point center = new Point(Math.round(c[0]), Math.round(c[1]));
                             Imgproc.circle(frame, center, 1, new Scalar(0, 100, 100), 3, 8, 0);
-                            int radius = (int) Math.round(c[2]);
-                            Imgproc.circle(frame, center, radius, new Scalar(255, 0, 255), 3, 8, 0);
                         }
 
                         ArrayList<Point> avgRobotFront = new ArrayList<Point>();
@@ -243,8 +243,8 @@ public class ComputerVision extends JPanel{
                        // HighGui.imshow("whatever", tempImage);
 
                         //HighGui.imshow("whatever3", tempImage3);
-                        HighGui.imshow("whatever4", combined);
-                        //HighGui.imshow("whatever5",tempImage5);
+                        //HighGui.imshow("whatever4", combined);
+                        HighGui.imshow("whatever5",tempImage6);
                         HighGui.waitKey(1);
 
 
