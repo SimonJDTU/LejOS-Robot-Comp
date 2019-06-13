@@ -68,7 +68,7 @@ public class ComputerVision extends JPanel{
 
         // Capturing from usb Camera
         // USB CAM index 4 , own is 0
-        camera = new VideoCapture(4);
+        camera = new VideoCapture(0);
         //camera.open("/dev/v41/by-id/usb-046d_Logitech_Webcam_C930e_DDCF656E-video-index0");
 
         // Set resulution
@@ -85,7 +85,7 @@ public class ComputerVision extends JPanel{
         // Show the mat frame
         System.out.println(frame.type());
         camera.read(frame);
-
+        Thread.sleep(2000);
         if(!camera.isOpened()){
             System.out.println("Error");
         }
@@ -328,8 +328,10 @@ public class ComputerVision extends JPanel{
         //}
     }
 
-    public void getDirections(){
-        getAngle(getClosestBall());
+    public double[] getDirections(){
+        double[] directions = new double[3];
+        getAngle(getClosestBall(), directions);
+        return directions;
     }
 
     public Point getClosestBall(){
@@ -348,26 +350,34 @@ public class ComputerVision extends JPanel{
         }else return new Point(0,0);
     }
 
-    public double getAngle(Point goal){
+    public double getAngle(Point goal, double[] directions){
+
 
         if(goal.x > 10 && goal.y > 10){
+            System.out.println(goal + " " + backCenter + " " + frontCenter);
             Point robotVector = new Point(frontCenter.x - backCenter.x, frontCenter.y - backCenter.y);
-            Point bigGoalVector = new Point(goal.x - frontCenter.x, goal.y - frontCenter.y);
+            Point bigGoalVector = new Point(goal.x - backCenter.x, goal.y - backCenter.y);
             Imgproc.line(frame, goal, backCenter,  new Scalar(250,0,0), 5);
             Point a = robotVector;
             Point b = bigGoalVector;
             double result = ((goal.x - backCenter.x) * (frontCenter.y - backCenter.y)) - ((goal.y - backCenter.y) * (frontCenter.x - backCenter.x));
-            System.out.println(result);
+            //System.out.println(result);
             if(result > 0){
-                System.out.println("turn left");
+                //System.out.println("turn left");
+                directions[0] = 1;
             }else{
-                System.out.println("turn right");
+                //System.out.println("turn right");
+                directions[0] = 0;
             }
             double dotProduct = (a.x*b.x)+(a.y*b.y);
 
             double magnitudeOfA = Math.sqrt(Math.pow(a.x,2)+Math.pow(a.y,2));
             double magnitudeOfB = Math.sqrt(Math.pow(b.x,2)+Math.pow(b.y,2));
             double Goalangle = Math.toDegrees(Math.acos(dotProduct/(magnitudeOfA*magnitudeOfB)));
+            directions[1] = Goalangle;
+
+            double distance = Math.sqrt(Math.pow(goal.x - backCenter.x, 2) + Math.pow(goal.y - backCenter.y, 2));
+            directions[2] = distance;
             //System.out.println(Goalangle + " - angle" );
             //System.out.println("backCenter: " + backCenter + ", frontCenter: " + frontCenter + ", goal: " + goal);
 
