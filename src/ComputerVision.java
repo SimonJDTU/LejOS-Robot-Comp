@@ -60,10 +60,12 @@ public class ComputerVision extends JPanel{
 
 
         // Loading core libary to get accesses to the camera
+
         OpenCV.loadLocally();
         // If not load correctly try:
         //System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
         //ComputerVision t = new ComputerVision();
+
         Point lastPositionFront = new Point();
         Point lastPositionBack = new Point();
 
@@ -74,7 +76,7 @@ public class ComputerVision extends JPanel{
         //camera.open("/dev/v41/by-id/usb-046d_Logitech_Webcam_C930e_DDCF656E-video-index0");
 
         // Set resulution
-        //1280 - 720        //640 - 480
+        // 720p(1280 - 720)   480p(640 - 480)
         camera.set(CV_CAP_PROP_FRAME_WIDTH,640);
         camera.set(CV_CAP_PROP_FRAME_HEIGHT, 480);
 
@@ -83,6 +85,7 @@ public class ComputerVision extends JPanel{
 
         ArrayList<Double> avgPoints = new ArrayList<Double>();
         double[] vector = new double[4];
+
         // Show the mat frame
         System.out.println(frame.type());
         camera.read(frame);
@@ -92,9 +95,7 @@ public class ComputerVision extends JPanel{
         }
         else
             {
-
-
-
+                // Clear
         }
         System.out.println("out");
         //camera.release();
@@ -102,6 +103,7 @@ public class ComputerVision extends JPanel{
 
     public void imageLoop(){
         //while(true) {
+
             // New Picture
             Mat tempImage = new Mat();
             Mat tempImage1 = new Mat();
@@ -110,17 +112,22 @@ public class ComputerVision extends JPanel{
             Mat tempImage4 = new Mat();
             Mat tempImage5 = new Mat();
             Mat tempImage6 = new Mat();
-            Mat tempCornerImage = new Mat();
             Mat combined = new Mat();
+
+            Mat tempCornerImage = new Mat();
 
             //Point frontCenter = new Point();
             //Point backCenter = new Point();
 
             if (camera.read(frame)) {
 
-                // Convert color
+                // Convert color for ball detection
                 Imgproc.cvtColor(frame, tempImage, COLOR_BGR2GRAY);
+
+                // Median Blur seams not to be importened for now. Umcomment and edit k size to use.
                 //Imgproc.medianBlur(tempImage, tempImage, 11);
+
+                // Normalize the image to increase and improve ball detection
                 Core.normalize(tempImage,tempImage,60,200,Core.NORM_MINMAX, CV_8UC1);
 
 
@@ -129,16 +136,17 @@ public class ComputerVision extends JPanel{
                 Mat fromtcircles = new Mat();
                 Mat backcircles = new Mat();
 
+                // HoughCircles to detect circles - to find TTBalls.
                 Imgproc.HoughCircles(tempImage, circles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows()/100, 50.0, 20.0, 4, 9 );  // save values 50, 50, 25,10,23
 
-                //Detect circels on Robot
-
+                // Detect circels on Robot
                 Imgproc.HoughCircles(tempImage, fromtcircles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows()/100, 50.0, 19.0, 10, 15);  // save values 50, 50, 25,10,23
                 Imgproc.HoughCircles(tempImage, backcircles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows()/100, 50.0, 19.0, 15, 30);  // save values 50, 50, 25,10,23
 
-                //New Mat to detect colors
+                // New Mat to detect colors
                 Imgproc.cvtColor(frame, tempImage1, COLOR_BGR2HSV);
                 Core.normalize(tempImage,tempImage1,10,200,Core.NORM_MINMAX, CV_8UC1);
+
                 Imgproc.cvtColor(frame, tempImage6, COLOR_BGR2HSV);
                 Imgproc.cvtColor(frame, tempCornerImage, COLOR_BGR2GRAY);
                 Imgproc.medianBlur(tempCornerImage, tempCornerImage, 7);
@@ -159,7 +167,7 @@ public class ComputerVision extends JPanel{
                 HighGui.imshow("whatever2", tempCornerImage);
 
                 locationOfBalls = new ArrayList<>();
-                
+
                 //Colorize circels
                 for (int i = 0; i < circles.cols(); i++) {
                     double[] c = circles.get(0, i);
