@@ -42,7 +42,7 @@ import static org.opencv.videoio.Videoio.CV_CAP_PROP_FRAME_WIDTH;
 public class ComputerVision extends JPanel
 {
     BufferedImage image;
-    Point frontCenter = new Point() , backCenter = new Point(), lastPositionFront = new Point(), lastPositionBack = new Point();
+    Point frontCenter = new Point() , backCenter = new Point(), lastPositionFront = new Point(), lastPositionBack = new Point(), goal2 = new Point();
     ArrayList<Point> locationOfBalls = new ArrayList<>();
     static ArrayList<ArrayList<Point>> ballConsistency = new ArrayList<>();
     Mat frame;
@@ -58,17 +58,21 @@ public class ComputerVision extends JPanel
     ArrayList<Point> corners = new ArrayList<>();
     public void init() throws InterruptedException {
 
+
         // Loading core libary to get accesses to the camera
+
         OpenCV.loadLocally();
         // If not load correctly try:
         //System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
         //ComputerVision t = new ComputerVision();
+
         Point lastPositionFront = new Point();
         Point lastPositionBack = new Point();
 
         // Capturing from usb Camera
+        // Camera has to be 142-143 from the ground.
         // USB CAM index 4 , own is 0
-        camera = new VideoCapture(4);
+        camera = new VideoCapture(0);
         //camera.open("/dev/v41/by-id/usb-046d_Logitech_Webcam_C930e_DDCF656E-video-index0");
 
         // Set resulution
@@ -99,6 +103,7 @@ public class ComputerVision extends JPanel
 
     public void imageLoop(){
         //while(true) {
+
             // New Picture
             Mat tempImage = new Mat();
             Mat tempImage1 = new Mat();
@@ -107,9 +112,10 @@ public class ComputerVision extends JPanel
             Mat tempImage4 = new Mat();
             Mat tempImage5 = new Mat();
             Mat tempImage6 = new Mat();
-            Mat tempImage7 = new Mat();
             Mat combined = new Mat();
             Mat tempCornerImage = new Mat();
+
+            //Mat tempCornerImage = new Mat();
 
             //Point frontCenter = new Point();
             //Point backCenter = new Point();
@@ -145,7 +151,9 @@ public class ComputerVision extends JPanel
 
                 // New Mat to detect colors
                 Imgproc.cvtColor(frame, tempImage1, COLOR_BGR2HSV);
+                Mat tempImage8 = tempImage1.clone();
                 Core.normalize(tempImage,tempImage1,10,200,Core.NORM_MINMAX, CV_8UC1);
+
                 Imgproc.cvtColor(frame, tempImage6, COLOR_BGR2HSV);
                 Imgproc.cvtColor(frame, tempCornerImage, COLOR_BGR2GRAY);
                 Imgproc.medianBlur(tempCornerImage, tempCornerImage, 7);
@@ -159,8 +167,9 @@ public class ComputerVision extends JPanel
                 // SMALL
                 inRange(tempImage1, new Scalar(30, 40, 230), new Scalar(45, 60, 255), tempImage3);
                 // BIG
-                inRange(tempImage1, new Scalar(70, 20, 230), new Scalar(100, 40, 255), tempImage4);
 
+                 inRange(tempImage8, new Scalar(25, 80, 245), new Scalar(40, 100, 255), tempImage4);
+                HighGui.imshow("after", tempImage4);
                 // Detect Corners
                 inRange(tempCornerImage,new Scalar(10,10,10),new Scalar(44,44,44),tempCornerImage);
                 HighGui.imshow("whatever2", tempCornerImage);
@@ -234,6 +243,7 @@ public class ComputerVision extends JPanel
                         }
                     }
                 }
+                //System.out.println("amount of balls: " + balls.size());
                 for(int i = 0; i < balls.size(); i++){
                     Imgproc.circle(frame, balls.get(i), 1, new Scalar(255, 100, 100), 7, 8, 0);
                 }
@@ -263,24 +273,24 @@ public class ComputerVision extends JPanel
                 final ArrayList<Point> avgRobotBack = new ArrayList<Point>();
                 Point avgGoal2 = new Point();
                 Point goal = new Point();
-                Point goal2 = new Point();
+                //Point goal2 = new Point();
                 Point borders = new Point();
-                combined = tempImage2;
+                combined = tempImage4;
                 ArrayList<Double> meanForGoal2x = new ArrayList<>();
                 ArrayList<Double> meanForGoal2y = new ArrayList<>();
-                        /*for (int i = 0; i < tempImage.rows(); i++) {
+                        for (int i = 0; i < tempImage.rows(); i++) {
                             for (int j = 0; j < tempImage.cols(); j++) {
 
-                                if (tempImage2.get(i, j)[0] == 255) {
+                                /*if (tempImage2.get(i, j)[0] == 255) {
                                     combined.put(i, j, tempImage2.get(i, j)[0]);
                                     borders = new Point(j,i);
-                                }
+                                }*/
 
-                                if (tempImage3.get(i, j)[0] == 255) {
+                                /*if (tempImage3.get(i, j)[0] == 255) {
                                     combined.put(i, j, tempImage3.get(i, j)[0] );
                                     goal = new Point(j, i);
 
-                                }
+                                }*/
 
                                 if (tempImage4.get(i, j)[0] == 255) {
                                     combined.put(i, j, tempImage4.get(i, j)[0]);
@@ -289,7 +299,7 @@ public class ComputerVision extends JPanel
                                     meanForGoal2y.add(goal2.y);
                                 }
 
-                              *//*  if (tempImage5.get(i, j)[0] == 255) {
+                              /*  if (tempImage5.get(i, j)[0] == 255) {
                                     if(i <= 10 && j <= 10){
                                         avgRobotBack.add(lastPositionBack);
                                     }else{
@@ -303,13 +313,13 @@ public class ComputerVision extends JPanel
                                     combined.put(i, j, tempImage6.get(i, j)[0] );
                                     avgRobotFront.add(new Point(j,i));
 
-                                }*//*
+                                }*/
 
 
                             }
 
 
-                        }*/
+                        }
 
                 try {
                     Collections.sort(meanForGoal2x);
@@ -353,7 +363,7 @@ public class ComputerVision extends JPanel
                 // HighGui.imshow("whatever", tempImage);
 
                 //HighGui.imshow("whatever3", tempImage3);
-                //HighGui.imshow("whatever4", tempImage4);
+                HighGui.imshow("whatever4", combined);
                 //HighGui.imshow("whatever5",tempImage5);
                 HighGui.waitKey(1);
                 //System.out.println(backCenter);
@@ -369,6 +379,23 @@ public class ComputerVision extends JPanel
             }
 
         //}
+    }
+
+    public double[] goToGoal(){
+        double[] directions = new double[3];
+        Point DeliveryPoint = goal2.clone();
+        DeliveryPoint.x -= 40;
+        getAngle(DeliveryPoint, directions);
+        return directions;
+    }
+
+    public double[] turnToFaceGoal(){
+        Point asdf = goal2.clone();
+        double[] directions = new double[3];
+        //asdf.x -= 39;
+        getAngle(asdf, directions);
+        directions[2] = 0;
+        return directions;
     }
 
     public double[] getDirections(){
@@ -398,8 +425,6 @@ public class ComputerVision extends JPanel
     }
 
     public double getAngle(Point goal, double[] directions){
-
-
         if(goal.x > 10 && goal.y > 10){
             Point robotVector = new Point(frontCenter.x - backCenter.x, frontCenter.y - backCenter.y);
             Point bigGoalVector = new Point(goal.x - backCenter.x, goal.y - backCenter.y);
@@ -426,10 +451,7 @@ public class ComputerVision extends JPanel
             directions[2] = distance;
             //System.out.println(Goalangle + " - angle" );
             //System.out.println("backCenter: " + backCenter + ", frontCenter: " + frontCenter + ", goal: " + goal);
-
         }
-
-
         return 0;
     }
 
