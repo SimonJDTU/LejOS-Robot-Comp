@@ -72,7 +72,7 @@ public class ComputerVision extends JPanel
         // Capturing from usb Camera
         // Camera has to be 142-143 from the ground.
         // USB CAM index 4 , own is 0
-        camera = new VideoCapture(0);
+        camera = new VideoCapture(1);
         //camera.open("/dev/v41/by-id/usb-046d_Logitech_Webcam_C930e_DDCF656E-video-index0");
 
         // Set resulution
@@ -119,7 +119,8 @@ public class ComputerVision extends JPanel
 
             //Point frontCenter = new Point();
             //Point backCenter = new Point();
-
+        ArrayList<Double> medianX = new ArrayList<>();
+        ArrayList<Double> medianY = new ArrayList<>();
         Point upperLeftCorner = new Point();
         Point upperRightCorner = new Point();
         Point lowerLeftCorner = new Point();
@@ -174,82 +175,84 @@ public class ComputerVision extends JPanel
                 HighGui.imshow("whatever2", tempCornerImage);
 
                 locationOfBalls = new ArrayList<>();
-                ArrayList<Double> cornerMeanX = new ArrayList<>();
-                ArrayList<Double> cornerMeanY = new ArrayList<>();
-                ArrayList<Double> medianX = new ArrayList<>();
-                ArrayList<Double> medianY = new ArrayList<>();
-                //upper left corner
-                for(int i = 0; i < 30; i++){
-                    for( int j=0; j < 30; j++){
-                        if(tempCornerImage.get(i,j)[0] == 255) {
-                            upperLeftCorner = new Point(i, j);
-                            medianX.add(upperLeftCorner.x);
-                            medianY.add(upperLeftCorner.y);
+                try {
+
+                    //upper left corner
+                    for (int i = 0; i < 50; i++) {
+                        for (int j = 0; j < 50; j++) {
+                            if (tempCornerImage.get(i, j)[0] == 255) {
+                                upperLeftCorner = new Point(i, j);
+                                medianX.add(upperLeftCorner.x);
+                                medianY.add(upperLeftCorner.y);
 
 
+                            }
                         }
                     }
-                }
-                Collections.sort(medianX);
-                Collections.sort(medianY);
-                upperLeftCorner.x = getMedianForCornerX(medianX);
-                upperLeftCorner.y = getMedianForCornerY(medianY);
-                corners.add(upperLeftCorner);
-                medianX.clear();
-                medianY.clear();
+                    Collections.sort(medianX);
+                    Collections.sort(medianY);
+                    upperLeftCorner.x = medianX.get(medianX.size() / 2);
+                    upperLeftCorner.y = medianY.get(medianY.size() / 2);
+                    corners.add(upperLeftCorner);
+                    medianX.clear();
+                    medianY.clear();
 
-                //upper right corner
-                for(int i = tempCornerImage.cols()-30; i < tempCornerImage.cols(); i++){
-                    for( int j=0; j < 30; j++){
-                        if(tempCornerImage.get(j,i)[0] == 255) {
-                            upperRightCorner = new Point(i, j);
-                            medianX.add(upperRightCorner.x);
-                            medianY.add(upperRightCorner.y);
+                    //upper right corner
+                    for (int i = tempCornerImage.cols() - 50; i < tempCornerImage.cols(); i++) {
+                        for (int j = 0; j < 50; j++) {
+                            if (tempCornerImage.get(j, i)[0] == 255) {
+                                upperRightCorner = new Point(i, j);
+                                medianX.add(upperRightCorner.x);
+                                medianY.add(upperRightCorner.y);
 
+                            }
                         }
                     }
-                }
-                Collections.sort(medianX);
-                Collections.sort(medianY);
-                upperRightCorner.x = getMedianForCornerX(medianX);
-                upperRightCorner.y = getMedianForCornerY(medianY);
-                corners.add(upperRightCorner);
-                medianX.clear();
-                medianY.clear();
+                    Collections.sort(medianX);
+                    Collections.sort(medianY);
+                    upperRightCorner.x = medianX.get(medianX.size() / 2);
+                    upperRightCorner.y = medianY.get(medianY.size() / 2);
+                    corners.add(upperRightCorner);
+                    medianX.clear();
+                    medianY.clear();
 
-                //lower left corner
-                for(int i = 0; i < 30; i++){
-                    for( int j= tempCornerImage.rows()-30; j < tempCornerImage.rows(); j++){
-                        if(tempCornerImage.get(j,i)[0] == 255) {
-                            lowerLeftCorner = new Point(i, j);
-                            medianX.add(lowerLeftCorner.x);
-                            medianY.add(lowerLeftCorner.y);
+                    //lower left corner
+                    for (int i = 0; i < 50; i++) {
+                        for (int j = tempCornerImage.rows() - 50; j < tempCornerImage.rows(); j++) {
+                            if (tempCornerImage.get(j, i)[0] == 255) {
+                                lowerLeftCorner = new Point(i, j);
+                                medianX.add(lowerLeftCorner.x);
+                                medianY.add(lowerLeftCorner.y);
+                            }
                         }
                     }
-                }
-
-                upperLeftCorner.x = getMedianForCornerX(medianX);
-                upperLeftCorner.y = getMedianForCornerY(medianY);
-                corners.add(lowerLeftCorner);
-                medianX.clear();
-                medianY.clear();
-                //lower right corner
-                for(int i = tempCornerImage.cols()-30; i < tempCornerImage.cols(); i++){
-                    for( int j=tempCornerImage.rows()-30; j < tempCornerImage.rows(); j++){
-                        if(tempCornerImage.get(j,i)[0] == 255) {
-                            lowerRightCorner = new Point(i, j);
-                            medianX.add(lowerRightCorner.x);
-                            medianY.add(lowerRightCorner.y);
+                    Collections.sort(medianX);
+                    Collections.sort(medianY);
+                    upperLeftCorner.x = medianX.get(medianX.size() / 2);
+                    upperLeftCorner.y = medianY.get(medianY.size() / 2);
+                    corners.add(lowerLeftCorner);
+                    medianX.clear();
+                    medianY.clear();
+                    //lower right corner
+                    for (int i = tempCornerImage.cols() - 50; i < tempCornerImage.cols(); i++) {
+                        for (int j = tempCornerImage.rows() - 50; j < tempCornerImage.rows(); j++) {
+                            if (tempCornerImage.get(j, i)[0] == 255) {
+                                lowerRightCorner = new Point(i, j);
+                                medianX.add(lowerRightCorner.x);
+                                medianY.add(lowerRightCorner.y);
+                            }
                         }
                     }
+                    Collections.sort(medianX);
+                    Collections.sort(medianY);
+                    lowerRightCorner.x = medianX.get(medianX.size() / 2);
+                    lowerRightCorner.y = medianY.get(medianY.size() / 2);
+                    corners.add(lowerRightCorner);
+                    medianX.clear();
+                    medianY.clear();
+                }catch (IndexOutOfBoundsException e){
+                    System.out.println("unlucky");
                 }
-
-                lowerRightCorner.x = getMedianForCornerX(medianX);
-                lowerRightCorner.y = getMedianForCornerY(medianY);
-                corners.add(lowerRightCorner);
-                medianX.clear();
-                medianY.clear();
-
                 //Colorize circels
                 for (int i = 0; i < circles.cols(); i++) {
                     double[] c = circles.get(0, i);
@@ -420,14 +423,14 @@ public class ComputerVision extends JPanel
     public double[] goToGoal(){
         double[] directions = new double[3];
         Point DeliveryPoint = goal2.clone();
-        DeliveryPoint.x -= 40;
+        DeliveryPoint.x -= 60;
         getAngle(DeliveryPoint, directions);
         return directions;
     }
 
     public double[] turnToFaceGoal(){
-        Point asdf = goal2.clone();
         double[] directions = new double[3];
+        Point asdf = goal2.clone();
         //asdf.x -= 39;
         getAngle(asdf, directions);
         directions[2] = 0;
