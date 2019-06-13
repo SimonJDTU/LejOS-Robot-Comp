@@ -58,19 +58,15 @@ public class ComputerVision extends JPanel
     ArrayList<Point> corners = new ArrayList<>();
     public void init() throws InterruptedException {
 
-
         // Loading core libary to get accesses to the camera
-
         OpenCV.loadLocally();
         // If not load correctly try:
         //System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
         //ComputerVision t = new ComputerVision();
-
         Point lastPositionFront = new Point();
         Point lastPositionBack = new Point();
 
         // Capturing from usb Camera
-        // Camera has to be 142-143 from the ground.
         // USB CAM index 4 , own is 0
         camera = new VideoCapture(4);
         //camera.open("/dev/v41/by-id/usb-046d_Logitech_Webcam_C930e_DDCF656E-video-index0");
@@ -103,7 +99,6 @@ public class ComputerVision extends JPanel
 
     public void imageLoop(){
         //while(true) {
-
             // New Picture
             Mat tempImage = new Mat();
             Mat tempImage1 = new Mat();
@@ -112,8 +107,8 @@ public class ComputerVision extends JPanel
             Mat tempImage4 = new Mat();
             Mat tempImage5 = new Mat();
             Mat tempImage6 = new Mat();
+            Mat tempImage7 = new Mat();
             Mat combined = new Mat();
-
             Mat tempCornerImage = new Mat();
 
             //Point frontCenter = new Point();
@@ -150,7 +145,6 @@ public class ComputerVision extends JPanel
                 // New Mat to detect colors
                 Imgproc.cvtColor(frame, tempImage1, COLOR_BGR2HSV);
                 Core.normalize(tempImage,tempImage1,10,200,Core.NORM_MINMAX, CV_8UC1);
-
                 Imgproc.cvtColor(frame, tempImage6, COLOR_BGR2HSV);
                 Imgproc.cvtColor(frame, tempCornerImage, COLOR_BGR2GRAY);
                 Imgproc.medianBlur(tempCornerImage, tempCornerImage, 7);
@@ -413,8 +407,10 @@ public class ComputerVision extends JPanel
         //}
     }
 
-    public void getDirections(){
-        getAngle(getClosestBall());
+    public double[] getDirections(){
+        double[] directions = new double[3];
+        getAngle(getClosestBall(), directions);
+        return directions;
     }
 
     public void markEdge(){
@@ -437,26 +433,33 @@ public class ComputerVision extends JPanel
         }else return new Point(0,0);
     }
 
-    public double getAngle(Point goal){
+    public double getAngle(Point goal, double[] directions){
+
 
         if(goal.x > 10 && goal.y > 10){
             Point robotVector = new Point(frontCenter.x - backCenter.x, frontCenter.y - backCenter.y);
-            Point bigGoalVector = new Point(goal.x - frontCenter.x, goal.y - frontCenter.y);
+            Point bigGoalVector = new Point(goal.x - backCenter.x, goal.y - backCenter.y);
             Imgproc.line(frame, goal, backCenter,  new Scalar(250,0,0), 5);
             Point a = robotVector;
             Point b = bigGoalVector;
             double result = ((goal.x - backCenter.x) * (frontCenter.y - backCenter.y)) - ((goal.y - backCenter.y) * (frontCenter.x - backCenter.x));
-            System.out.println(result);
+            //System.out.println(result);
             if(result > 0){
                 //System.out.println("turn left");
+                directions[0] = 1;
             }else{
                 //System.out.println("turn right");
+                directions[0] = 0;
             }
             double dotProduct = (a.x*b.x)+(a.y*b.y);
 
             double magnitudeOfA = Math.sqrt(Math.pow(a.x,2)+Math.pow(a.y,2));
             double magnitudeOfB = Math.sqrt(Math.pow(b.x,2)+Math.pow(b.y,2));
             double Goalangle = Math.toDegrees(Math.acos(dotProduct/(magnitudeOfA*magnitudeOfB)));
+            directions[1] = Goalangle;
+
+            double distance = Math.sqrt(Math.pow(goal.x - backCenter.x, 2) + Math.pow(goal.y - backCenter.y, 2));
+            directions[2] = distance;
             //System.out.println(Goalangle + " - angle" );
             //System.out.println("backCenter: " + backCenter + ", frontCenter: " + frontCenter + ", goal: " + goal);
 
