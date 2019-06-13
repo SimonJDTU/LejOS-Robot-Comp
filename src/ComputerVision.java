@@ -136,7 +136,6 @@ public class ComputerVision extends JPanel
                 // Normalize the image to increase and improve ball detection
                 Core.normalize(tempImage,tempImage,60,200,Core.NORM_MINMAX, CV_8UC1);
 
-
                 // Use HoughCircels to mark the balls
                 Mat circles = new Mat();
                 Mat fromtcircles = new Mat();
@@ -175,44 +174,81 @@ public class ComputerVision extends JPanel
                 HighGui.imshow("whatever2", tempCornerImage);
 
                 locationOfBalls = new ArrayList<>();
-
+                ArrayList<Double> cornerMeanX = new ArrayList<>();
+                ArrayList<Double> cornerMeanY = new ArrayList<>();
+                ArrayList<Double> medianX = new ArrayList<>();
+                ArrayList<Double> medianY = new ArrayList<>();
                 //upper left corner
                 for(int i = 0; i < 30; i++){
                     for( int j=0; j < 30; j++){
                         if(tempCornerImage.get(i,j)[0] == 255) {
                             upperLeftCorner = new Point(i, j);
+                            medianX.add(upperLeftCorner.x);
+                            medianY.add(upperLeftCorner.y);
+
 
                         }
                     }
                 }
+                Collections.sort(medianX);
+                Collections.sort(medianY);
+                upperLeftCorner.x = getMedianForCornerX(medianX);
+                upperLeftCorner.y = getMedianForCornerY(medianY);
                 corners.add(upperLeftCorner);
+                medianX.clear();
+                medianY.clear();
+
                 //upper right corner
                 for(int i = tempCornerImage.cols()-30; i < tempCornerImage.cols(); i++){
                     for( int j=0; j < 30; j++){
                         if(tempCornerImage.get(j,i)[0] == 255) {
                             upperRightCorner = new Point(i, j);
+                            medianX.add(upperRightCorner.x);
+                            medianY.add(upperRightCorner.y);
+
                         }
                     }
                 }
+                Collections.sort(medianX);
+                Collections.sort(medianY);
+                upperRightCorner.x = getMedianForCornerX(medianX);
+                upperRightCorner.y = getMedianForCornerY(medianY);
                 corners.add(upperRightCorner);
+                medianX.clear();
+                medianY.clear();
+
                 //lower left corner
                 for(int i = 0; i < 30; i++){
                     for( int j= tempCornerImage.rows()-30; j < tempCornerImage.rows(); j++){
                         if(tempCornerImage.get(j,i)[0] == 255) {
                             lowerLeftCorner = new Point(i, j);
+                            medianX.add(lowerLeftCorner.x);
+                            medianY.add(lowerLeftCorner.y);
                         }
                     }
                 }
+
+                upperLeftCorner.x = getMedianForCornerX(medianX);
+                upperLeftCorner.y = getMedianForCornerY(medianY);
                 corners.add(lowerLeftCorner);
+                medianX.clear();
+                medianY.clear();
                 //lower right corner
                 for(int i = tempCornerImage.cols()-30; i < tempCornerImage.cols(); i++){
                     for( int j=tempCornerImage.rows()-30; j < tempCornerImage.rows(); j++){
                         if(tempCornerImage.get(j,i)[0] == 255) {
                             lowerRightCorner = new Point(i, j);
+                            medianX.add(lowerRightCorner.x);
+                            medianY.add(lowerRightCorner.y);
                         }
                     }
                 }
+
+                lowerRightCorner.x = getMedianForCornerX(medianX);
+                lowerRightCorner.y = getMedianForCornerY(medianY);
                 corners.add(lowerRightCorner);
+                medianX.clear();
+                medianY.clear();
 
                 //Colorize circels
                 for (int i = 0; i < circles.cols(); i++) {
@@ -458,5 +494,17 @@ public class ComputerVision extends JPanel
     @Override
     public void paint(Graphics g) {
         g.drawImage(image, 0, 0, this);
+    }
+
+    public double getMedianForCornerX(ArrayList<Double> medianX){
+        Collections.sort(medianX);
+         medianX.get(medianX.size() / 2);
+        return medianX.get(medianX.size() / 2);
+    }
+
+    public double getMedianForCornerY(ArrayList<Double> medianY){
+        Collections.sort(medianY);
+        medianY.get(medianY.size() / 2);
+        return medianY.get(medianY.size() / 2);
     }
 }
