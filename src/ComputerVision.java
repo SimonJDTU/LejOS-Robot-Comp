@@ -58,6 +58,7 @@ public class ComputerVision extends JPanel{
 
     public void init() throws InterruptedException {
 
+
         // Loading core libary to get accesses to the camera
         OpenCV.loadLocally();
         // If not load correctly try:
@@ -67,6 +68,7 @@ public class ComputerVision extends JPanel{
         Point lastPositionBack = new Point();
 
         // Capturing from usb Camera
+        // Camera has to be 142-143 from the ground.
         // USB CAM index 4 , own is 0
         camera = new VideoCapture(4);
         //camera.open("/dev/v41/by-id/usb-046d_Logitech_Webcam_C930e_DDCF656E-video-index0");
@@ -81,11 +83,10 @@ public class ComputerVision extends JPanel{
 
         ArrayList<Double> avgPoints = new ArrayList<Double>();
         double[] vector = new double[4];
-
         // Show the mat frame
         System.out.println(frame.type());
         camera.read(frame);
-
+        Thread.sleep(2000);
         if(!camera.isOpened()){
             System.out.println("Error");
         }
@@ -109,7 +110,7 @@ public class ComputerVision extends JPanel{
             Mat tempImage4 = new Mat();
             Mat tempImage5 = new Mat();
             Mat tempImage6 = new Mat();
-            Mat tempImage7 = new Mat();
+            Mat tempCornerImage = new Mat();
             Mat combined = new Mat();
 
             //Point frontCenter = new Point();
@@ -121,7 +122,7 @@ public class ComputerVision extends JPanel{
                 Imgproc.cvtColor(frame, tempImage, COLOR_BGR2GRAY);
                 //Imgproc.medianBlur(tempImage, tempImage, 11);
                 Core.normalize(tempImage,tempImage,60,200,Core.NORM_MINMAX, CV_8UC1);
-                HighGui.imshow("whatever2", tempImage);
+
 
                 // Use HoughCircels to mark the balls
                 Mat circles = new Mat();
@@ -129,6 +130,9 @@ public class ComputerVision extends JPanel{
                 Mat backcircles = new Mat();
 
                 Imgproc.HoughCircles(tempImage, circles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows()/100, 50.0, 20.0, 4, 9 );  // save values 50, 50, 25,10,23
+
+                //Detect circels on Robot
+
                 Imgproc.HoughCircles(tempImage, fromtcircles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows()/100, 50.0, 19.0, 10, 15);  // save values 50, 50, 25,10,23
                 Imgproc.HoughCircles(tempImage, backcircles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows()/100, 50.0, 19.0, 15, 30);  // save values 50, 50, 25,10,23
 
@@ -136,30 +140,26 @@ public class ComputerVision extends JPanel{
                 Imgproc.cvtColor(frame, tempImage1, COLOR_BGR2HSV);
                 Core.normalize(tempImage,tempImage1,10,200,Core.NORM_MINMAX, CV_8UC1);
                 Imgproc.cvtColor(frame, tempImage6, COLOR_BGR2HSV);
-                Imgproc.cvtColor(frame, tempImage7, COLOR_BGR2GRAY);
-                Imgproc.medianBlur(tempImage7, tempImage7, 3);
+                Imgproc.cvtColor(frame, tempCornerImage, COLOR_BGR2GRAY);
+                Imgproc.medianBlur(tempCornerImage, tempCornerImage, 7);
+                Core.normalize(tempCornerImage,tempCornerImage,10,200,Core.NORM_MINMAX, CV_8UC1);
 
                 //Core.inRange(tempImage2,new Scalar(0,0,0),new Scalar(250,250,180),tempImage2);
                 //borders
                 inRange(tempImage1, new Scalar(0, 170, 170), new Scalar(190, 255, 255), tempImage2);
 
-                //Goals
+                // Goals
+                // SMALL
                 inRange(tempImage1, new Scalar(30, 40, 230), new Scalar(45, 60, 255), tempImage3);
-
-
+                // BIG
                 inRange(tempImage1, new Scalar(70, 20, 230), new Scalar(100, 40, 255), tempImage4);
 
-                //Robot
-
-                // GREEN
-                inRange(tempImage1,new Scalar(40,20,170),new Scalar(65,45,200),tempImage5);
-
-                // VIOLET
-                inRange(tempImage1,new Scalar(155,55,229),new Scalar(160,65,239),tempImage6);
-
-                inRange(tempImage7,new Scalar(10,10,10),new Scalar(40,40,40),tempImage7);
+                // Detect Corners
+                inRange(tempCornerImage,new Scalar(10,10,10),new Scalar(35,35,35),tempCornerImage);
+                HighGui.imshow("whatever2", tempCornerImage);
 
                 locationOfBalls = new ArrayList<>();
+                
                 //Colorize circels
                 for (int i = 0; i < circles.cols(); i++) {
                     double[] c = circles.get(0, i);
