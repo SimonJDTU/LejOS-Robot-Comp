@@ -72,7 +72,7 @@ public class ComputerVision extends JPanel{
         // Capturing from usb Camera
         // Camera has to be 142-143 from the ground.
         // USB CAM index 4 , own is 0
-        camera = new VideoCapture(4);
+        camera = new VideoCapture(1);
         //camera.open("/dev/v41/by-id/usb-046d_Logitech_Webcam_C930e_DDCF656E-video-index0");
 
         // Set resulution
@@ -119,6 +119,11 @@ public class ComputerVision extends JPanel{
             //Point frontCenter = new Point();
             //Point backCenter = new Point();
 
+        Point upperLeftCorner = new Point();
+        Point upperRightCorner = new Point();
+        Point lowerLeftCorner = new Point();
+        Point lowerRightCorner = new Point();
+
             if (camera.read(frame)) {
 
                 // Convert color for ball detection
@@ -163,10 +168,45 @@ public class ComputerVision extends JPanel{
                 inRange(tempImage1, new Scalar(70, 20, 230), new Scalar(100, 40, 255), tempImage4);
 
                 // Detect Corners
-                inRange(tempCornerImage,new Scalar(10,10,10),new Scalar(35,35,35),tempCornerImage);
+                inRange(tempCornerImage,new Scalar(10,10,10),new Scalar(44,44,44),tempCornerImage);
                 HighGui.imshow("whatever2", tempCornerImage);
 
                 locationOfBalls = new ArrayList<>();
+
+                //upper left corner
+                for(int i = 0; i < 30; i++){
+                    for( int j=0; j < 30; j++){
+                        if(tempCornerImage.get(i,j)[0] == 255) {
+                            upperLeftCorner = new Point(i, j);
+
+                        }
+                    }
+                }
+                //upper right corner
+                for(int i = tempCornerImage.cols()-30; i < tempCornerImage.cols(); i++){
+                    for( int j=0; j < 30; j++){
+                        if(tempCornerImage.get(j,i)[0] == 255) {
+                            upperRightCorner = new Point(i, j);
+                        }
+                    }
+                }
+
+                //lower left corner
+                for(int i = 0; i < 30; i++){
+                    for( int j= tempCornerImage.rows()-30; j < tempCornerImage.rows(); j++){
+                        if(tempCornerImage.get(j,i)[0] == 255) {
+                            lowerLeftCorner = new Point(i, j);
+                        }
+                    }
+                }
+                //lower right corner
+                for(int i = tempCornerImage.cols()-30; i < tempCornerImage.cols(); i++){
+                    for( int j=tempCornerImage.rows()-30; j < tempCornerImage.rows(); j++){
+                        if(tempCornerImage.get(j,i)[0] == 255) {
+                            lowerRightCorner = new Point(i, j);
+                        }
+                    }
+                }
 
                 //Colorize circels
                 for (int i = 0; i < circles.cols(); i++) {
@@ -220,7 +260,7 @@ public class ComputerVision extends JPanel{
 
                     lastPositionFront = frontCenter;
                 }catch (NullPointerException e){
-                    System.out.println("no circle found");
+                    //System.out.println("no circle found");
                     frontCenter = lastPositionFront;
                 }
 
@@ -285,6 +325,10 @@ public class ComputerVision extends JPanel{
                     //System.out.println("oops");
                 }
 
+                System.out.println("upperLeftCorner: "+ upperLeftCorner);
+                System.out.println("UpperRightCorner: "+ upperRightCorner);
+                System.out.println("LowerLeftcorner: "+ lowerLeftCorner);
+                System.out.println("LowerRightcorner: "+ lowerRightCorner);
                 double Goalangle;
                 double dis;
                 // System.out.println("back:"+robotBack +"\n "+"front:"+robotFront);
@@ -367,9 +411,9 @@ public class ComputerVision extends JPanel{
             double result = ((goal.x - backCenter.x) * (frontCenter.y - backCenter.y)) - ((goal.y - backCenter.y) * (frontCenter.x - backCenter.x));
             System.out.println(result);
             if(result > 0){
-                System.out.println("turn left");
+                //System.out.println("turn left");
             }else{
-                System.out.println("turn right");
+                //System.out.println("turn right");
             }
             double dotProduct = (a.x*b.x)+(a.y*b.y);
 
