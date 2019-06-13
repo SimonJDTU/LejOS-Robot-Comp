@@ -47,7 +47,17 @@ Delay.msDelay(5000);
 robot.StopReleaseBalls();*/
 
        // Server server = new Server(5000);
+        ComputerVision cv = new ComputerVision();
+        cv.imageLoop();
+        double[] temp = cv.getDirections();
+        
         Robot robot = new Robot();
+        if(temp[1]==1){
+            robot.TurnClockwiseAB((int)temp[0]);
+        }else{
+            robot.TurnCounterclockwiseAB((int)temp[0]);
+        }
+        robot.MoveDistanceForwardAB(3);
         //robot.ReleaseBallsD();
         robot.ThrowBallsC(3);
         //robot.StoreBallsC(3);
