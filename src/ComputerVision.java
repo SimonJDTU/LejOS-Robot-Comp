@@ -39,7 +39,8 @@ import static org.opencv.imgproc.Imgproc.*;
 import static org.opencv.videoio.Videoio.CV_CAP_PROP_FRAME_HEIGHT;
 import static org.opencv.videoio.Videoio.CV_CAP_PROP_FRAME_WIDTH;
 
-public class ComputerVision extends JPanel{
+public class ComputerVision extends JPanel
+{
     BufferedImage image;
     Point frontCenter = new Point() , backCenter = new Point(), lastPositionFront = new Point(), lastPositionBack = new Point();
     ArrayList<Point> locationOfBalls = new ArrayList<>();
@@ -54,8 +55,7 @@ public class ComputerVision extends JPanel{
             e.printStackTrace();
         }
     }
-
-
+    ArrayList<Point> corners = new ArrayList<>();
     public void init() throws InterruptedException {
 
 
@@ -72,7 +72,7 @@ public class ComputerVision extends JPanel{
         // Capturing from usb Camera
         // Camera has to be 142-143 from the ground.
         // USB CAM index 4 , own is 0
-        camera = new VideoCapture(1);
+        camera = new VideoCapture(4);
         //camera.open("/dev/v41/by-id/usb-046d_Logitech_Webcam_C930e_DDCF656E-video-index0");
 
         // Set resulution
@@ -239,8 +239,6 @@ public class ComputerVision extends JPanel{
                 }
                 for(int i = 0; i < balls.size(); i++){
                     Imgproc.circle(frame, balls.get(i), 1, new Scalar(255, 100, 100), 7, 8, 0);
-                    //int radius = (int) Math.round(c[2]);
-                    //mgproc.circle(frame, balls.get(i), radius, new Scalar(255, 0, 255), 3, 8, 0);
                 }
 
                 try{
@@ -325,10 +323,6 @@ public class ComputerVision extends JPanel{
                     //System.out.println("oops");
                 }
 
-                System.out.println("upperLeftCorner: "+ upperLeftCorner);
-                System.out.println("UpperRightCorner: "+ upperRightCorner);
-                System.out.println("LowerLeftcorner: "+ lowerLeftCorner);
-                System.out.println("LowerRightcorner: "+ lowerRightCorner);
                 double Goalangle;
                 double dis;
                 // System.out.println("back:"+robotBack +"\n "+"front:"+robotFront);
@@ -382,6 +376,10 @@ public class ComputerVision extends JPanel{
 
     public void getDirections(){
         getAngle(getClosestBall());
+    }
+
+    public void markEdge(){
+
     }
 
     public Point getClosestBall(){
