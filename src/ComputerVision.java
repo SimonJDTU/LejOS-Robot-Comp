@@ -182,6 +182,7 @@ public class ComputerVision extends JPanel
                         }
                     }
                 }
+                corners.add(upperLeftCorner);
                 //upper right corner
                 for(int i = tempCornerImage.cols()-30; i < tempCornerImage.cols(); i++){
                     for( int j=0; j < 30; j++){
@@ -190,7 +191,7 @@ public class ComputerVision extends JPanel
                         }
                     }
                 }
-
+                corners.add(upperRightCorner);
                 //lower left corner
                 for(int i = 0; i < 30; i++){
                     for( int j= tempCornerImage.rows()-30; j < tempCornerImage.rows(); j++){
@@ -199,6 +200,7 @@ public class ComputerVision extends JPanel
                         }
                     }
                 }
+                corners.add(lowerLeftCorner);
                 //lower right corner
                 for(int i = tempCornerImage.cols()-30; i < tempCornerImage.cols(); i++){
                     for( int j=tempCornerImage.rows()-30; j < tempCornerImage.rows(); j++){
@@ -207,6 +209,7 @@ public class ComputerVision extends JPanel
                         }
                     }
                 }
+                corners.add(lowerRightCorner);
 
                 //Colorize circels
                 for (int i = 0; i < circles.cols(); i++) {
