@@ -16,6 +16,7 @@ import javax.swing.*;
 
 import nu.pattern.OpenCV;
 
+import org.opencv.calib3d.Calib3d;
 import org.opencv.core.*;
 import org.opencv.core.Point;
 import org.opencv.highgui.HighGui;
@@ -47,6 +48,7 @@ public class ComputerVision extends JPanel
     static ArrayList<ArrayList<Point>> ballConsistency = new ArrayList<>();
     Mat frame;
     VideoCapture camera;
+    boolean onceHomo = true;
 
     public ComputerVision(){
         try {
@@ -72,7 +74,7 @@ public class ComputerVision extends JPanel
         // Capturing from usb Camera
         // Camera has to be 142-143 from the ground.
         // USB CAM index 4 , own is 0
-        camera = new VideoCapture(1);
+        camera = new VideoCapture(0);
         //camera.open("/dev/v41/by-id/usb-046d_Logitech_Webcam_C930e_DDCF656E-video-index0");
 
         // Set resulution
@@ -105,6 +107,7 @@ public class ComputerVision extends JPanel
         //while(true) {
 
             // New Picture
+
             Mat tempImage = new Mat();
             Mat tempImage1 = new Mat();
             Mat tempImage2 = new Mat();
@@ -112,8 +115,10 @@ public class ComputerVision extends JPanel
             Mat tempImage4 = new Mat();
             Mat tempImage5 = new Mat();
             Mat tempImage6 = new Mat();
+            Mat matHomography = new Mat();
             Mat combined = new Mat();
             Mat tempCornerImage = new Mat();
+            MatOfPoint2f cornersOfTrack, cornersOfFrame;
 
             //Mat tempCornerImage = new Mat();
 
@@ -129,63 +134,37 @@ public class ComputerVision extends JPanel
             if (camera.read(frame)) {
 
                 // Convert color for ball detection
-                Imgproc.cvtColor(frame, tempImage, COLOR_BGR2GRAY);
 
                 // Median Blur seams not to be importened for now. Umcomment and edit k size to use.
                 //Imgproc.medianBlur(tempImage, tempImage, 11);
 
                 // Normalize the image to increase and improve ball detection
-                Core.normalize(tempImage,tempImage,60,200,Core.NORM_MINMAX, CV_8UC1);
 
                 // Use HoughCircels to mark the balls
                 Mat circles = new Mat();
                 Mat fromtcircles = new Mat();
                 Mat backcircles = new Mat();
 
-                // HoughCircles to detect circles - to find TTBalls.
-                Imgproc.HoughCircles(tempImage, circles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows()/100, 50.0, 20.0, 4, 9 );  // save values 50, 50, 25,10,23
 
-                // Detect circels on Robot
-                Imgproc.HoughCircles(tempImage, fromtcircles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows()/100, 50.0, 19.0, 10, 15);  // save values 50, 50, 25,10,23
-                Imgproc.HoughCircles(tempImage, backcircles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows()/100, 50.0, 19.0, 15, 30);  // save values 50, 50, 25,10,23
+                Imgproc.cvtColor(frame, tempCornerImage, COLOR_BGR2GRAY);
+                Imgproc.medianBlur(tempCornerImage, tempCornerImage, 7);
+                Core.normalize(tempCornerImage,tempCornerImage,10,200,Core.NORM_MINMAX, CV_8UC1);
 
                 // New Mat to detect colors
                 Imgproc.cvtColor(frame, tempImage1, COLOR_BGR2HSV);
                 Mat tempImage8 = tempImage1.clone();
                 Core.normalize(tempImage,tempImage1,10,200,Core.NORM_MINMAX, CV_8UC1);
 
-                Imgproc.cvtColor(frame, tempImage6, COLOR_BGR2HSV);
-                Imgproc.cvtColor(frame, tempCornerImage, COLOR_BGR2GRAY);
-                Imgproc.medianBlur(tempCornerImage, tempCornerImage, 7);
-                Core.normalize(tempCornerImage,tempCornerImage,10,200,Core.NORM_MINMAX, CV_8UC1);
-
-                //Core.inRange(tempImage2,new Scalar(0,0,0),new Scalar(250,250,180),tempImage2);
-                //borders
-                inRange(tempImage1, new Scalar(0, 170, 170), new Scalar(190, 255, 255), tempImage2);
-
-                // Goals
-                // SMALL
-                inRange(tempImage1, new Scalar(30, 40, 230), new Scalar(45, 60, 255), tempImage3);
-                // BIG
-
-                 inRange(tempImage8, new Scalar(25, 80, 245), new Scalar(40, 100, 255), tempImage4);
-                HighGui.imshow("after", tempImage4);
-                // Detect Corners
-                inRange(tempCornerImage,new Scalar(10,10,10),new Scalar(44,44,44),tempCornerImage);
-                HighGui.imshow("whatever2", tempCornerImage);
-
-                locationOfBalls = new ArrayList<>();
+                inRange(tempCornerImage,new Scalar(5,5,5),new Scalar(46,46,46),tempCornerImage);
                 try {
 
                     //upper left corner
-                    for (int i = 0; i < 50; i++) {
-                        for (int j = 0; j < 50; j++) {
-                            if (tempCornerImage.get(i, j)[0] == 255) {
+                    for (int i = 0; i < 40; i++) {
+                        for (int j = 0; j < 40; j++) {
+                            if (tempCornerImage.get(j, i)[0] == 255) {
                                 upperLeftCorner = new Point(i, j);
                                 medianX.add(upperLeftCorner.x);
                                 medianY.add(upperLeftCorner.y);
-
-
                             }
                         }
                     }
@@ -228,8 +207,8 @@ public class ComputerVision extends JPanel
                     }
                     Collections.sort(medianX);
                     Collections.sort(medianY);
-                    upperLeftCorner.x = medianX.get(medianX.size() / 2);
-                    upperLeftCorner.y = medianY.get(medianY.size() / 2);
+                    lowerLeftCorner.x = medianX.get(medianX.size() / 2);
+                    lowerLeftCorner.y = medianY.get(medianY.size() / 2);
                     corners.add(lowerLeftCorner);
                     medianX.clear();
                     medianY.clear();
@@ -253,6 +232,49 @@ public class ComputerVision extends JPanel
                 }catch (IndexOutOfBoundsException e){
                     System.out.println("unlucky");
                 }
+                // SMALL
+                inRange(tempImage1, new Scalar(35, 45, 225), new Scalar(60, 75, 255), tempImage3);
+
+                    cornersOfTrack = new MatOfPoint2f(upperLeftCorner, upperRightCorner, lowerLeftCorner, lowerRightCorner);
+                    cornersOfFrame = new MatOfPoint2f(new Point(0, 0), new Point(640, 0), new Point(0, 480), new Point(640, 480));
+                    matHomography = Calib3d.findHomography(cornersOfTrack, cornersOfFrame, Calib3d.RANSAC, 4); //Calib3d.RANSAC
+
+                    warpPerspective(frame, frame, matHomography, frame.size());
+                    tempImage = frame.clone();
+
+
+                Imgproc.cvtColor(frame, tempImage, COLOR_BGR2GRAY);
+                Core.normalize(tempImage,tempImage,60,200,Core.NORM_MINMAX, CV_8UC1);
+
+
+                // HoughCircles to detect circles - to find TTBalls.
+                Imgproc.HoughCircles(tempImage, circles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows()/100, 50.0, 20.0, 4, 9 );  // save values 50, 50, 25,10,23
+
+                // Detect circels on Robot
+                Imgproc.HoughCircles(tempImage, fromtcircles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows()/100, 50.0, 19.0, 10, 15);  // save values 50, 50, 25,10,23
+                Imgproc.HoughCircles(tempImage, backcircles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows()/100, 50.0, 19.0, 15, 30);  // save values 50, 50, 25,10,23
+
+
+
+                Imgproc.cvtColor(frame, tempImage6, COLOR_BGR2HSV);
+
+                //Core.inRange(tempImage2,new Scalar(0,0,0),new Scalar(250,250,180),tempImage2);
+                //borders
+                inRange(tempImage1, new Scalar(0, 170, 170), new Scalar(190, 255, 255), tempImage2);
+
+                // Goals
+                // SMALL
+
+                // BIG
+
+                 inRange(tempImage8, new Scalar(25, 80, 245), new Scalar(40, 100, 255), tempImage4);
+                HighGui.imshow("after", tempImage4);
+                // Detect Corners
+
+                locationOfBalls = new ArrayList<>();
+
+                // Homography to warp the picture into the frame
+
                 //Colorize circels
                 for (int i = 0; i < circles.cols(); i++) {
                     double[] c = circles.get(0, i);
@@ -301,7 +323,6 @@ public class ComputerVision extends JPanel
                     c = fromtcircles.get(0, 0);
                     frontCenter = new Point(Math.round(c[0]), Math.round(c[1]));
                     Imgproc.circle(frame, frontCenter, 1, new Scalar(0, 100, 100), 3, 8, 0);
-
                     lastPositionFront = frontCenter;
                 }catch (NullPointerException e){
                     //System.out.println("no circle found");
@@ -386,7 +407,12 @@ public class ComputerVision extends JPanel
                         double magnitudeOfB = Math.sqrt(Math.pow(b.x,2)+Math.pow(b.y,2));
                         Goalangle = Math.toDegrees(Math.acos(dotProduct/(magnitudeOfA*magnitudeOfB)));*/
 
+
+
+
                 getDirections();
+
+
 
 
                            /* Goalangle = Math.toDegrees(Math.cos((robotVector.x*bigGoalVector.x + robotVector.y*bigGoalVector.y)/
@@ -402,6 +428,7 @@ public class ComputerVision extends JPanel
                 // HighGui.imshow("whatever", tempImage);
 
                 //HighGui.imshow("whatever3", tempImage3);
+                HighGui.imshow("whatever2", tempCornerImage);
                 HighGui.imshow("whatever4", combined);
                 //HighGui.imshow("whatever5",tempImage5);
                 HighGui.waitKey(1);
@@ -423,7 +450,8 @@ public class ComputerVision extends JPanel
     public double[] goToGoal(){
         double[] directions = new double[3];
         Point DeliveryPoint = goal2.clone();
-        DeliveryPoint.x -= 60;
+        //Point DeliveryPoint = new Point(0, 480.0/2.0);
+        DeliveryPoint.x += 70;
         getAngle(DeliveryPoint, directions);
         return directions;
     }
@@ -431,6 +459,7 @@ public class ComputerVision extends JPanel
     public double[] turnToFaceGoal(){
         double[] directions = new double[3];
         Point asdf = goal2.clone();
+        //Point asdf = new Point(0, 480.0/2.0);
         //asdf.x -= 39;
         getAngle(asdf, directions);
         directions[2] = 0;

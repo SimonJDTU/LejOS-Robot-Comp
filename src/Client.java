@@ -50,5 +50,9 @@ public class Client
         {
             System.out.println(i);
         }
+
+    }
+    public void recieveMessage(){
+
     }
 }
