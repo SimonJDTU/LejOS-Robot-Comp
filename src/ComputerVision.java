@@ -1,75 +1,48 @@
-import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferByte;
-import java.awt.image.WritableRaster;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
-import java.text.ParsePosition;
-import java.util.*;
-import javax.imageio.ImageIO;
-import javax.swing.*;
-
 import nu.pattern.OpenCV;
-
 import org.opencv.calib3d.Calib3d;
-import org.opencv.core.*;
 import org.opencv.core.Point;
+import org.opencv.core.*;
 import org.opencv.highgui.HighGui;
-import org.opencv.imgcodecs.*;
-import org.opencv.videoio.*;
-
-import java.nio.*;
 import org.opencv.imgproc.Imgproc;
-import org.opencv.core.Mat;
-import org.opencv.core.CvType;
-import org.opencv.core.Core;
-import org.opencv.core.Scalar;
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferInt;
-import java.util.Timer;
+import org.opencv.videoio.VideoCapture;
 
-import static org.opencv.core.Core.*;
-import static org.opencv.core.CvType.CV_64FC3;
+import javax.swing.*;
+import java.util.ArrayList;
+import java.util.Collections;
+
+import static org.opencv.core.Core.inRange;
 import static org.opencv.core.CvType.CV_8UC1;
 import static org.opencv.imgproc.Imgproc.*;
 import static org.opencv.videoio.Videoio.CV_CAP_PROP_FRAME_HEIGHT;
 import static org.opencv.videoio.Videoio.CV_CAP_PROP_FRAME_WIDTH;
 
-public class ComputerVision extends JPanel
-{
-    BufferedImage image;
-    Point frontCenter = new Point() , backCenter = new Point(), lastPositionFront = new Point(), lastPositionBack = new Point(), goal2 = new Point();
-    ArrayList<Point> locationOfBalls = new ArrayList<>();
-    static ArrayList<ArrayList<Point>> ballConsistency = new ArrayList<>();
-    Mat frame;
-    VideoCapture camera;
-    boolean onceHomo = true;
+public class ComputerVision extends JPanel implements IComputerVision, Runnable {
 
-    public ComputerVision(){
+    private Point frontCenter = new Point(), backCenter = new Point(), lastPositionFront = new Point(), lastPositionBack = new Point(), goal2 = new Point();
+    private ArrayList<Point> ballsLocation = new ArrayList<>();
+    private static ArrayList<ArrayList<Point>> ballConsistency = new ArrayList<>();
+    private Mat frame;
+    private VideoCapture camera;
+    private boolean programRunning = true;
+
+    private final int SET_FRAME_WIDTH = 640, SET_FRAME_HEIGHT = 480;
+
+    ComputerVision() {
         try {
             init();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
-    ArrayList<Point> corners = new ArrayList<>();
-    public void init() throws InterruptedException {
 
+    private void init() throws InterruptedException {
 
-        // Loading core libary to get accesses to the camera
-
+        /* Loading core libary to get accesses to the camera.
+        If not load correctly try:
+        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+        ComputerVision t = new ComputerVision();*/
         OpenCV.loadLocally();
-        // If not load correctly try:
-        //System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-        //ComputerVision t = new ComputerVision();
 
-        Point lastPositionFront = new Point();
-        Point lastPositionBack = new Point();
 
         // Capturing from usb Camera
         // Camera has to be 142-143 from the ground.
@@ -77,269 +50,167 @@ public class ComputerVision extends JPanel
         camera = new VideoCapture(0);
         //camera.open("/dev/v41/by-id/usb-046d_Logitech_Webcam_C930e_DDCF656E-video-index0");
 
-        // Set resulution
+        // Set resolution
         // 720p(1280 - 720)   480p(640 - 480)
-        camera.set(CV_CAP_PROP_FRAME_WIDTH,640);
-        camera.set(CV_CAP_PROP_FRAME_HEIGHT, 480);
+        camera.set(CV_CAP_PROP_FRAME_WIDTH, SET_FRAME_WIDTH);
+        camera.set(CV_CAP_PROP_FRAME_HEIGHT, SET_FRAME_HEIGHT);
 
         // New Mat frame
         frame = new Mat();
-
-        ArrayList<Double> avgPoints = new ArrayList<Double>();
-        double[] vector = new double[4];
 
         // Show the mat frame
         System.out.println(frame.type());
         camera.read(frame);
         Thread.sleep(2000);
-        if(!camera.isOpened()){
-            System.out.println("Error");
+        if (!camera.isOpened()) {
+            System.out.println("Camera Error");
         }
-        else
-            {
-                // Clear
-        }
-        System.out.println("out");
-        //camera.release();
+        System.out.println("Initialization completed");
     }
 
-    public void imageLoop(){
-        //while(true) {
+    @Override
+    public void run() {
+        Mat tempImage = new Mat();
+        Mat tempImage1 = new Mat();
+        Mat tempImage2 = new Mat();
+        Mat tempImage3 = new Mat();
+        Mat combined = new Mat();
+        Mat tempImage5 = new Mat();
+        Mat matHomography;
+        Mat cornerImage = new Mat();
+        MatOfPoint2f cornersOfFrame, cornersOfTrack;
+        Mat circles = new Mat();
+        Mat fromtcircles = new Mat();
+        Mat backcircles = new Mat();
+        ArrayList<Point> corners = new ArrayList<>();
 
-            // New Picture
+        do{
+            camera.read(frame);
+            // Convert color for ball detection
 
-            Mat tempImage = new Mat();
-            Mat tempImage1 = new Mat();
-            Mat tempImage2 = new Mat();
-            Mat tempImage3 = new Mat();
-            Mat tempImage4 = new Mat();
-            Mat tempImage5 = new Mat();
-            Mat tempImage6 = new Mat();
-            Mat matHomography = new Mat();
-            Mat combined = new Mat();
-            Mat tempCornerImage = new Mat();
-            MatOfPoint2f cornersOfTrack, cornersOfFrame;
+            // Median Blur seams not to be importened for now. Umcomment and edit k size to use.
+            //Imgproc.medianBlur(tempImage, tempImage, 11);
 
-            //Mat tempCornerImage = new Mat();
+            // Normalize the image to increase and improve ball detection
 
-            //Point frontCenter = new Point();
-            //Point backCenter = new Point();
-        ArrayList<Double> medianX = new ArrayList<>();
-        ArrayList<Double> medianY = new ArrayList<>();
-        Point upperLeftCorner = new Point();
-        Point upperRightCorner = new Point();
-        Point lowerLeftCorner = new Point();
-        Point lowerRightCorner = new Point();
+            // Use HoughCircels to mark the balls
 
-            if (camera.read(frame)) {
+            Imgproc.cvtColor(frame, cornerImage, COLOR_BGR2GRAY);
+            Imgproc.medianBlur(cornerImage, cornerImage, 7);
+            Core.normalize(cornerImage, cornerImage, 10, 200, Core.NORM_MINMAX, CV_8UC1);
 
-                // Convert color for ball detection
+            // New Mat to detect colors
+            Imgproc.cvtColor(frame, tempImage1, COLOR_BGR2HSV);
+            Mat tempImage8 = tempImage1.clone();
+            Core.normalize(tempImage, tempImage1, 10, 200, Core.NORM_MINMAX, CV_8UC1);
 
-                // Median Blur seams not to be importened for now. Umcomment and edit k size to use.
-                //Imgproc.medianBlur(tempImage, tempImage, 11);
+            inRange(cornerImage, new Scalar(5, 5, 5), new Scalar(46, 46, 46), cornerImage);
+            try {
+                corners = detectCorners(cornerImage);
+            } catch (IndexOutOfBoundsException e) {
+                System.out.println("unlucky");
+            }
+            // SMALL
+            inRange(tempImage1, new Scalar(35, 45, 225), new Scalar(60, 75, 255), tempImage3);
 
-                // Normalize the image to increase and improve ball detection
-
-                // Use HoughCircels to mark the balls
-                Mat circles = new Mat();
-                Mat fromtcircles = new Mat();
-                Mat backcircles = new Mat();
-
-
-                Imgproc.cvtColor(frame, tempCornerImage, COLOR_BGR2GRAY);
-                Imgproc.medianBlur(tempCornerImage, tempCornerImage, 7);
-                Core.normalize(tempCornerImage,tempCornerImage,10,200,Core.NORM_MINMAX, CV_8UC1);
-
-                // New Mat to detect colors
-                Imgproc.cvtColor(frame, tempImage1, COLOR_BGR2HSV);
-                Mat tempImage8 = tempImage1.clone();
-                Core.normalize(tempImage,tempImage1,10,200,Core.NORM_MINMAX, CV_8UC1);
-
-                inRange(tempCornerImage,new Scalar(5,5,5),new Scalar(46,46,46),tempCornerImage);
-                try {
-
-                    //upper left corner
-                    for (int i = 0; i < 40; i++) {
-                        for (int j = 0; j < 40; j++) {
-                            if (tempCornerImage.get(j, i)[0] == 255) {
-                                upperLeftCorner = new Point(i, j);
-                                medianX.add(upperLeftCorner.x);
-                                medianY.add(upperLeftCorner.y);
-                            }
-                        }
-                    }
-                    Collections.sort(medianX);
-                    Collections.sort(medianY);
-                    upperLeftCorner.x = medianX.get(medianX.size() / 2);
-                    upperLeftCorner.y = medianY.get(medianY.size() / 2);
-                    corners.add(upperLeftCorner);
-                    medianX.clear();
-                    medianY.clear();
-
-                    //upper right corner
-                    for (int i = tempCornerImage.cols() - 50; i < tempCornerImage.cols(); i++) {
-                        for (int j = 0; j < 50; j++) {
-                            if (tempCornerImage.get(j, i)[0] == 255) {
-                                upperRightCorner = new Point(i, j);
-                                medianX.add(upperRightCorner.x);
-                                medianY.add(upperRightCorner.y);
-
-                            }
-                        }
-                    }
-                    Collections.sort(medianX);
-                    Collections.sort(medianY);
-                    upperRightCorner.x = medianX.get(medianX.size() / 2);
-                    upperRightCorner.y = medianY.get(medianY.size() / 2);
-                    corners.add(upperRightCorner);
-                    medianX.clear();
-                    medianY.clear();
-
-                    //lower left corner
-                    for (int i = 0; i < 50; i++) {
-                        for (int j = tempCornerImage.rows() - 50; j < tempCornerImage.rows(); j++) {
-                            if (tempCornerImage.get(j, i)[0] == 255) {
-                                lowerLeftCorner = new Point(i, j);
-                                medianX.add(lowerLeftCorner.x);
-                                medianY.add(lowerLeftCorner.y);
-                            }
-                        }
-                    }
-                    Collections.sort(medianX);
-                    Collections.sort(medianY);
-                    lowerLeftCorner.x = medianX.get(medianX.size() / 2);
-                    lowerLeftCorner.y = medianY.get(medianY.size() / 2);
-                    corners.add(lowerLeftCorner);
-                    medianX.clear();
-                    medianY.clear();
-                    //lower right corner
-                    for (int i = tempCornerImage.cols() - 50; i < tempCornerImage.cols(); i++) {
-                        for (int j = tempCornerImage.rows() - 50; j < tempCornerImage.rows(); j++) {
-                            if (tempCornerImage.get(j, i)[0] == 255) {
-                                lowerRightCorner = new Point(i, j);
-                                medianX.add(lowerRightCorner.x);
-                                medianY.add(lowerRightCorner.y);
-                            }
-                        }
-                    }
-                    Collections.sort(medianX);
-                    Collections.sort(medianY);
-                    lowerRightCorner.x = medianX.get(medianX.size() / 2);
-                    lowerRightCorner.y = medianY.get(medianY.size() / 2);
-                    corners.add(lowerRightCorner);
-                    medianX.clear();
-                    medianY.clear();
-                }catch (IndexOutOfBoundsException e){
-                    System.out.println("unlucky");
-                }
-                // SMALL
-                inRange(tempImage1, new Scalar(35, 45, 225), new Scalar(60, 75, 255), tempImage3);
-
-                    cornersOfTrack = new MatOfPoint2f(upperLeftCorner, upperRightCorner, lowerLeftCorner, lowerRightCorner);
-                    cornersOfFrame = new MatOfPoint2f(new Point(0, 0), new Point(640, 0), new Point(0, 480), new Point(640, 480));
-                    matHomography = Calib3d.findHomography(cornersOfTrack, cornersOfFrame, Calib3d.RANSAC, 4); //Calib3d.RANSAC
-
-                    warpPerspective(frame, frame, matHomography, frame.size());
-                    tempImage = frame.clone();
+            //Homography warp
+            cornersOfTrack = new MatOfPoint2f(corners.get(0), corners.get(1), corners.get(2), corners.get(3));
+            cornersOfFrame = new MatOfPoint2f(new Point(0, 0), new Point(640, 0), new Point(0, 480), new Point(640, 480));
+            matHomography = Calib3d.findHomography(cornersOfTrack, cornersOfFrame, Calib3d.RANSAC, 4); //Calib3d.RANSAC
+            warpPerspective(frame, frame, matHomography, frame.size());
+            tempImage = frame.clone();
 
 
-                Imgproc.cvtColor(frame, tempImage, COLOR_BGR2GRAY);
-                Core.normalize(tempImage,tempImage,60,200,Core.NORM_MINMAX, CV_8UC1);
+            Imgproc.cvtColor(frame, tempImage, COLOR_BGR2GRAY);
+            Core.normalize(tempImage, tempImage, 60, 200, Core.NORM_MINMAX, CV_8UC1);
 
 
-                // HoughCircles to detect circles - to find TTBalls.
-                Imgproc.HoughCircles(tempImage, circles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows()/100, 50.0, 20.0, 4, 9 );  // save values 50, 50, 25,10,23
+            // HoughCircles to detect circles - to find TTBalls.
+            Imgproc.HoughCircles(tempImage, circles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows() / 100, 50.0, 20.0, 4, 9);  // save values 50, 50, 25,10,23
 
-                // Detect circels on Robot
-                Imgproc.HoughCircles(tempImage, fromtcircles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows()/100, 50.0, 19.0, 10, 15);  // save values 50, 50, 25,10,23
-                Imgproc.HoughCircles(tempImage, backcircles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows()/100, 50.0, 19.0, 15, 30);  // save values 50, 50, 25,10,23
+            // Detect circels on Robot
+            Imgproc.HoughCircles(tempImage, fromtcircles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows() / 100, 50.0, 19.0, 10, 15);  // save values 50, 50, 25,10,23
+            Imgproc.HoughCircles(tempImage, backcircles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows() / 100, 50.0, 19.0, 15, 30);  // save values 50, 50, 25,10,23
 
 
+            Imgproc.cvtColor(frame, tempImage5, COLOR_BGR2HSV);
 
-                Imgproc.cvtColor(frame, tempImage6, COLOR_BGR2HSV);
+            //Core.inRange(tempImage2,new Scalar(0,0,0),new Scalar(250,250,180),tempImage2);
+            //borders
+            inRange(tempImage1, new Scalar(0, 170, 170), new Scalar(190, 255, 255), tempImage2);
 
-                //Core.inRange(tempImage2,new Scalar(0,0,0),new Scalar(250,250,180),tempImage2);
-                //borders
-                inRange(tempImage1, new Scalar(0, 170, 170), new Scalar(190, 255, 255), tempImage2);
+            // Goals
+            // SMALL
 
-                // Goals
-                // SMALL
+            // BIG
 
-                // BIG
+            inRange(tempImage8, new Scalar(25, 80, 245), new Scalar(40, 100, 255), combined);
+            HighGui.imshow("after", combined);
+            // Detect Corners
 
-                 inRange(tempImage8, new Scalar(25, 80, 245), new Scalar(40, 100, 255), tempImage4);
-                HighGui.imshow("after", tempImage4);
-                // Detect Corners
+            //Colorize circels
+            for (int i = 0; i < circles.cols(); i++) {
+                double[] c = circles.get(0, i);
+                Point center = new Point(Math.round(c[0]), Math.round(c[1]));
+                ballsLocation.add(center);
 
-                locationOfBalls = new ArrayList<>();
+            }
+            ballConsistency.add(0, ballsLocation);
+            if (ballConsistency.size() >= 10) {
+                ballConsistency.remove(ballConsistency.size() - 1);
+            }
+            ArrayList<Point> balls = new ArrayList<>();
 
-                // Homography to warp the picture into the frame
-
-                //Colorize circels
-                for (int i = 0; i < circles.cols(); i++) {
-                    double[] c = circles.get(0, i);
-                    Point center = new Point(Math.round(c[0]), Math.round(c[1]));
-                    locationOfBalls.add(center);
-
-                }
-                ballConsistency.add(0, locationOfBalls);
-                if(ballConsistency.size() >= 10){
-                    ballConsistency.remove(ballConsistency.size()-1);
-                }
-                ArrayList<Point> balls = new ArrayList<>();
-
-                for(int i = 0; i < ballConsistency.size(); i++){
-                    for(int j = 0; j < ballConsistency.get(i).size(); j++){
-                        if(!balls.contains(ballConsistency.get(i).get(j))){
-                            balls.add(ballConsistency.get(i).get(j));
-                        }
+            for (ArrayList<Point> points : ballConsistency) {
+                for (int j = 0; j < points.size(); j++) {
+                    if (!balls.contains(points.get(j))) {
+                        balls.add(points.get(j));
                     }
                 }
-                for(int i = 0; i < balls.size(); i++){
-                    for(int j = 0; j < balls.size(); j++){
-                        if(i != j && (balls.get(i).x <= balls.get(j).x+5 && balls.get(i).x >= balls.get(j).x-5) && (balls.get(i).y <= balls.get(j).y+5 && balls.get(i).y >= balls.get(j).y-5)){
-                            balls.remove(i);
-                            i--;
-                            break;
-                        }
+            }
+            for (int i = 0; i < balls.size(); i++) {
+                for (int j = 0; j < balls.size(); j++) {
+                    if (i != j && (balls.get(i).x <= balls.get(j).x + 5 && balls.get(i).x >= balls.get(j).x - 5) && (balls.get(i).y <= balls.get(j).y + 5 && balls.get(i).y >= balls.get(j).y - 5)) {
+                        balls.remove(i);
+                        i--;
+                        break;
                     }
                 }
-                //System.out.println("amount of balls: " + balls.size());
-                for(int i = 0; i < balls.size(); i++){
-                    Imgproc.circle(frame, balls.get(i), 1, new Scalar(255, 100, 100), 7, 8, 0);
-                }
+            }
+            //System.out.println("amount of balls: " + balls.size());
+            for (Point ball : balls) {
+                circle(frame, ball, 1, new Scalar(255, 100, 100), 7, 8, 0);
+            }
 
-                try{
+            try {
 
-                    double[] c = backcircles.get(0, 0);
-                    backCenter = new Point(Math.round(c[0]), Math.round(c[1]));
-                    Imgproc.circle(frame, backCenter, 1, new Scalar(0, 100, 100), 3, 8, 0);
-                    lastPositionBack = backCenter;
-                }catch (NullPointerException e){
-                    backCenter = lastPositionBack;
-                }
-                try {
-                    double[] c = backcircles.get(0, 0);
-                    c = fromtcircles.get(0, 0);
-                    frontCenter = new Point(Math.round(c[0]), Math.round(c[1]));
-                    Imgproc.circle(frame, frontCenter, 1, new Scalar(0, 100, 100), 3, 8, 0);
-                    lastPositionFront = frontCenter;
-                }catch (NullPointerException e){
-                    //System.out.println("no circle found");
-                    frontCenter = lastPositionFront;
-                }
+                double[] c = backcircles.get(0, 0);
+                backCenter = new Point(Math.round(c[0]), Math.round(c[1]));
+                Imgproc.circle(frame, backCenter, 1, new Scalar(0, 100, 100), 3, 8, 0);
+                lastPositionBack = backCenter;
+            } catch (NullPointerException e) {
+                backCenter = lastPositionBack;
+            }
+            try {
+                double[] c = backcircles.get(0, 0);
+                c = fromtcircles.get(0, 0);
+                frontCenter = new Point(Math.round(c[0]), Math.round(c[1]));
+                Imgproc.circle(frame, frontCenter, 1, new Scalar(0, 100, 100), 3, 8, 0);
+                lastPositionFront = frontCenter;
+            } catch (NullPointerException e) {
+                //System.out.println("no circle found");
+                frontCenter = lastPositionFront;
+            }
 
-                ArrayList<Point> avgRobotFront = new ArrayList<Point>();
-                final ArrayList<Point> avgRobotBack = new ArrayList<Point>();
-                Point avgGoal2 = new Point();
-                Point goal = new Point();
-                //Point goal2 = new Point();
-                Point borders = new Point();
-                combined = tempImage4;
-                ArrayList<Double> meanForGoal2x = new ArrayList<>();
-                ArrayList<Double> meanForGoal2y = new ArrayList<>();
-                        for (int i = 0; i < tempImage.rows(); i++) {
-                            for (int j = 0; j < tempImage.cols(); j++) {
+            ArrayList<Point> avgRobotFront = new ArrayList<Point>();
+            final ArrayList<Point> avgRobotBack = new ArrayList<Point>();
+            Point avgGoal2 = new Point();
+            Point goal = new Point();
+            //Point goal2 = new Point();
+            ArrayList<Double> meanForGoal2x = new ArrayList<>();
+            ArrayList<Double> meanForGoal2y = new ArrayList<>();
+            for (int i = 0; i < tempImage.rows(); i++) {
+                for (int j = 0; j < tempImage.cols(); j++) {
 
                                 /*if (tempImage2.get(i, j)[0] == 255) {
                                     combined.put(i, j, tempImage2.get(i, j)[0]);
@@ -352,12 +223,12 @@ public class ComputerVision extends JPanel
 
                                 }*/
 
-                                if (tempImage4.get(i, j)[0] == 255) {
-                                    combined.put(i, j, tempImage4.get(i, j)[0]);
-                                    goal2 = new Point(j,i);
-                                    meanForGoal2x.add(goal2.x);
-                                    meanForGoal2y.add(goal2.y);
-                                }
+                    if (combined.get(i, j)[0] == 255) {
+                        combined.put(i, j, combined.get(i, j)[0]);
+                        goal2 = new Point(j, i);
+                        meanForGoal2x.add(goal2.x);
+                        meanForGoal2y.add(goal2.y);
+                    }
 
                               /*  if (tempImage5.get(i, j)[0] == 255) {
                                     if(i <= 10 && j <= 10){
@@ -369,33 +240,27 @@ public class ComputerVision extends JPanel
                                     avgRobotBack.add(new Point(j, i));
 
                                 }
-                                if (tempImage6.get(i, j)[0] == 255) {
-                                    combined.put(i, j, tempImage6.get(i, j)[0] );
+                                if (tempImage5.get(i, j)[0] == 255) {
+                                    combined.put(i, j, tempImage5.get(i, j)[0] );
                                     avgRobotFront.add(new Point(j,i));
 
                                 }*/
 
 
-                            }
-
-
-                        }
-
-                try {
-                    Collections.sort(meanForGoal2x);
-                    Collections.sort(meanForGoal2y);
-                    goal2.x = meanForGoal2x.get(meanForGoal2x.size() / 2);
-                    goal2.y = meanForGoal2y.get(meanForGoal2y.size() / 2);
-                }catch (IndexOutOfBoundsException e){
-                    //System.out.println("oops");
                 }
 
-                double Goalangle;
-                double dis;
-                // System.out.println("back:"+robotBack +"\n "+"front:"+robotFront);
-                dis = Math.sqrt(Math.pow(goal2.x - frontCenter.x, 2) + Math.pow(goal.y - frontCenter.y, 2));
-                Imgproc.line(frame, frontCenter, backCenter,  new Scalar(0,0,250), 5);
-                Imgproc.line(frame, goal2, goal2,  new Scalar(0,250,0), 5);
+
+            }
+
+            try {
+                Collections.sort(meanForGoal2x);
+                Collections.sort(meanForGoal2y);
+                goal2.x = meanForGoal2x.get(meanForGoal2x.size() / 2);
+                goal2.y = meanForGoal2y.get(meanForGoal2y.size() / 2);
+            } catch (IndexOutOfBoundsException e) {
+                //System.out.println("oops");
+            }
+
 
                         /*Point robotVector = new Point(frontCenter.x - backCenter.x, frontCenter.y - backCenter.y);
                         Point bigGoalVector = new Point(goal2.x - frontCenter.x, goal2.y - frontCenter.y);
@@ -407,136 +272,155 @@ public class ComputerVision extends JPanel
                         double magnitudeOfB = Math.sqrt(Math.pow(b.x,2)+Math.pow(b.y,2));
                         Goalangle = Math.toDegrees(Math.acos(dotProduct/(magnitudeOfA*magnitudeOfB)));*/
 
-
-
-
-                getDirections();
-
-
-
+            //getDirection();
 
                            /* Goalangle = Math.toDegrees(Math.cos((robotVector.x*bigGoalVector.x + robotVector.y*bigGoalVector.y)/
                                    (Math.sqrt(Math.pow(robotVector.x,2)+Math.pow(robotVector.y,2)))
                                            * Math.sqrt(Math.pow(bigGoalVector.x,2)*Math.pow(bigGoalVector.y,2))));*/
 
-                // System.out.println("frobotfront :" + avgRobotFront.size());
-                //System.out.println("robotback ;"+ avgRobotBack.size());
-                // System.out.println("goal"+ goal);
-                //System.out.println(dis + " - dist ");
-
-                HighGui.imshow("SHIET SON", frame);
-                // HighGui.imshow("whatever", tempImage);
-
-                //HighGui.imshow("whatever3", tempImage3);
-                HighGui.imshow("whatever2", tempCornerImage);
-                HighGui.imshow("whatever4", combined);
-                //HighGui.imshow("whatever5",tempImage5);
-                HighGui.waitKey(1);
-                //System.out.println(backCenter);
+            //System.out.println("frobotfront :" + avgRobotFront.size());
+            //System.out.println("robotback ;"+ avgRobotBack.size());
+            //System.out.println("goal"+ goal);
+            //System.out.println(dis + " - dist ");
 
 
-                if (frame.empty()) {
-                    System.out.println("1");
-                }
-                if (frame.type() == CV_8UC1) {
-                    System.out.println("2");
-                }
-
+            /*if (frame.empty()) {
+                System.out.println("1");
             }
+            if (frame.type() == CV_8UC1) {
+                System.out.println("2");
+            }*/
 
-        //}
+
+            showGUI(cornerImage,combined);
+        }while (programRunning);
+        System.out.println("ComputerVision ended");
     }
 
-    public double[] goToGoal(){
-        double[] directions = new double[3];
-        Point DeliveryPoint = goal2.clone();
-        //Point DeliveryPoint = new Point(0, 480.0/2.0);
-        DeliveryPoint.x += 70;
-        getAngle(DeliveryPoint, directions);
-        return directions;
-    }
+    public void drawOnImages(Point point1, Point point2, Scalar color) {
 
-    public double[] turnToFaceGoal(){
-        double[] directions = new double[3];
-        Point asdf = goal2.clone();
-        //Point asdf = new Point(0, 480.0/2.0);
-        //asdf.x -= 39;
-        getAngle(asdf, directions);
-        directions[2] = 0;
-        return directions;
-    }
-
-    public double[] getDirections(){
-        double[] directions = new double[3];
-        getAngle(getClosestBall(), directions);
-        return directions;
-    }
-
-    public void markEdge(){
+        Imgproc.line(frame, point1, point2, color, 5);
 
     }
 
-    public Point getClosestBall(){
-        //it is assumes that the back of the robot is the center.
-        double minDist = 1000000;
-        int minIndex = 1000;
-        for(int i = 0; i < locationOfBalls.size(); i++){
-            double distance = Math.sqrt(Math.pow(locationOfBalls.get(i).x-backCenter.x, 2) + Math.pow(locationOfBalls.get(i).y - backCenter.y, 2));
-            if(distance < minDist){
-                minDist = distance;
-                minIndex = i;
+    private void showGUI(Mat cornerImage, Mat combined){
+        HighGui.imshow("SHIET SON", frame);
+        HighGui.imshow("whatever2", cornerImage);
+        HighGui.imshow("whatever4", combined);
+        //HighGui.imshow("whatever", tempImage);
+        //HighGui.imshow("whatever3", tempImage3);
+        //HighGui.imshow("whatever5",tempImage5);
+        HighGui.waitKey(1);
+    }
+
+    private ArrayList<Point> detectCorners(Mat cornerImage) throws IndexOutOfBoundsException {
+
+        ArrayList<Double> medianX = new ArrayList<>();
+        ArrayList<Double> medianY = new ArrayList<>();
+        Point upperLeftCorner = new Point();
+        Point upperRightCorner = new Point();
+        Point lowerLeftCorner = new Point();
+        Point lowerRightCorner = new Point();
+        ArrayList<Point> corners = new ArrayList<>();
+
+        //upper left corner
+        for (int i = 0; i < 50; i++) {
+            for (int j = 0; j < 50; j++) {
+                if (cornerImage.get(i, j)[0] == 255) {
+                    upperLeftCorner = new Point(i, j);
+                    medianX.add(upperLeftCorner.x);
+                    medianY.add(upperLeftCorner.y);
+                }
             }
         }
-        if(minIndex != 1000){
-            return locationOfBalls.get(minIndex);
-        }else return new Point(0,0);
-    }
-
-    public double getAngle(Point goal, double[] directions){
-        if(goal.x > 10 && goal.y > 10){
-            Point robotVector = new Point(frontCenter.x - backCenter.x, frontCenter.y - backCenter.y);
-            Point bigGoalVector = new Point(goal.x - backCenter.x, goal.y - backCenter.y);
-            Imgproc.line(frame, goal, backCenter,  new Scalar(250,0,0), 5);
-            Point a = robotVector;
-            Point b = bigGoalVector;
-            double result = ((goal.x - backCenter.x) * (frontCenter.y - backCenter.y)) - ((goal.y - backCenter.y) * (frontCenter.x - backCenter.x));
-            //System.out.println(result);
-            if(result > 0){
-                //System.out.println("turn left");
-                directions[0] = 1;
-            }else{
-                //System.out.println("turn right");
-                directions[0] = 0;
-            }
-            double dotProduct = (a.x*b.x)+(a.y*b.y);
-
-            double magnitudeOfA = Math.sqrt(Math.pow(a.x,2)+Math.pow(a.y,2));
-            double magnitudeOfB = Math.sqrt(Math.pow(b.x,2)+Math.pow(b.y,2));
-            double Goalangle = Math.toDegrees(Math.acos(dotProduct/(magnitudeOfA*magnitudeOfB)));
-            directions[1] = Goalangle;
-
-            double distance = Math.sqrt(Math.pow(goal.x - backCenter.x, 2) + Math.pow(goal.y - backCenter.y, 2));
-            directions[2] = distance;
-            //System.out.println(Goalangle + " - angle" );
-            //System.out.println("backCenter: " + backCenter + ", frontCenter: " + frontCenter + ", goal: " + goal);
-        }
-        return 0;
-    }
-
-    @Override
-    public void paint(Graphics g) {
-        g.drawImage(image, 0, 0, this);
-    }
-
-    public double getMedianForCornerX(ArrayList<Double> medianX){
         Collections.sort(medianX);
-         medianX.get(medianX.size() / 2);
-        return medianX.get(medianX.size() / 2);
+        Collections.sort(medianY);
+        upperLeftCorner.x = medianX.get(medianX.size() / 2);
+        upperLeftCorner.y = medianY.get(medianY.size() / 2);
+        corners.add(upperLeftCorner);
+        medianX.clear();
+        medianY.clear();
+
+        //upper right corner
+        for (int i = cornerImage.cols() - 50; i < cornerImage.cols(); i++) {
+            for (int j = 0; j < 50; j++) {
+                if (cornerImage.get(j, i)[0] == 255) {
+                    upperRightCorner = new Point(i, j);
+                    medianX.add(upperRightCorner.x);
+                    medianY.add(upperRightCorner.y);
+
+                }
+            }
+        }
+        Collections.sort(medianX);
+        Collections.sort(medianY);
+        upperRightCorner.x = medianX.get(medianX.size() / 2);
+        upperRightCorner.y = medianY.get(medianY.size() / 2);
+        corners.add(upperRightCorner);
+        medianX.clear();
+        medianY.clear();
+
+        //lower left corner
+        for (int i = 0; i < 50; i++) {
+            for (int j = cornerImage.rows() - 50; j < cornerImage.rows(); j++) {
+                if (cornerImage.get(j, i)[0] == 255) {
+                    lowerLeftCorner = new Point(i, j);
+                    medianX.add(lowerLeftCorner.x);
+                    medianY.add(lowerLeftCorner.y);
+                }
+            }
+        }
+        Collections.sort(medianX);
+        Collections.sort(medianY);
+        upperLeftCorner.x = medianX.get(medianX.size() / 2);
+        upperLeftCorner.y = medianY.get(medianY.size() / 2);
+        corners.add(lowerLeftCorner);
+        medianX.clear();
+        medianY.clear();
+        //lower right corner
+        for (int i = cornerImage.cols() - 50; i < cornerImage.cols(); i++) {
+            for (int j = cornerImage.rows() - 50; j < cornerImage.rows(); j++) {
+                if (cornerImage.get(j, i)[0] == 255) {
+                    lowerRightCorner = new Point(i, j);
+                    medianX.add(lowerRightCorner.x);
+                    medianY.add(lowerRightCorner.y);
+                }
+            }
+        }
+        Collections.sort(medianX);
+        Collections.sort(medianY);
+        lowerRightCorner.x = medianX.get(medianX.size() / 2);
+        lowerRightCorner.y = medianY.get(medianY.size() / 2);
+        corners.add(lowerRightCorner);
+
+        Scalar color = new Scalar(0,0,250);
+        drawOnImages(upperLeftCorner,upperRightCorner,color);
+        drawOnImages(upperRightCorner,lowerRightCorner,color);
+        drawOnImages(lowerRightCorner,lowerLeftCorner,color);
+        drawOnImages(lowerLeftCorner,upperLeftCorner,color);
+
+        return corners;
+
     }
 
-    public double getMedianForCornerY(ArrayList<Double> medianY){
-        Collections.sort(medianY);
-        medianY.get(medianY.size() / 2);
-        return medianY.get(medianY.size() / 2);
+    public ArrayList<Point> getBallsLocation() {
+        return ballsLocation;
     }
+
+    public ArrayList<Point> getRobotLocation() {
+        ArrayList<Point> robotLocation = new ArrayList<>();
+        robotLocation.add(backCenter);
+        robotLocation.add(frontCenter);
+        return robotLocation;
+    }
+
+    //TODO: return both goal locations
+    public Point getGoalsLocation() {
+        return goal2;
+    }
+
+    public void setProgramRunning(Boolean bool){
+        this.programRunning=bool;
+    }
+
 }

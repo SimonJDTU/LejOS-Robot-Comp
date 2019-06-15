@@ -30,7 +30,7 @@ public class Client
         }
         catch(IOException i)
         {
-            System.out.println(i);
+            i.printStackTrace();
         }
 
         // string to read message from input
@@ -48,7 +48,7 @@ public class Client
         }
         catch(IOException i)
         {
-            System.out.println(i);
+            i.printStackTrace();
         }
 
     }
