@@ -41,6 +41,7 @@ public class Robot
         Motor.A.setSpeed(600);
         Motor.B.setSpeed(600);
         int rotation = (int) (distance * 35.34);
+        System.out.println("Moved " + distance + " forward");
         Motor.A.rotate(rotation, true);
         Motor.B.rotate(rotation, false);
     }
@@ -89,7 +90,7 @@ public class Robot
         Motor.A.setSpeed(200);
         Motor.B.setSpeed(200);
         System.out.println("Turned " + degrees + " degrees");
-        int  angle = (int) (degrees * 5.05);
+        int  angle = (int) (degrees * 5.077);
         //System.out.println("Angle is " + angle);
         Motor.B.rotate(-angle, true);
         Motor.A.rotate(angle, false);
@@ -123,24 +124,24 @@ public class Robot
      */
     public void CaptureBallsD()
     {
-        Motor.D.setSpeed(500);
+        Motor.D.setSpeed(Motor.D.getMaxSpeed());
         Motor.D.backward();
     }
 
     public void StoreBallsC(int amount)
     {
         Motor.C.setSpeed(Motor.C.getMaxSpeed());
-        Motor.C.rotate(-amount*1800,false);
+        Motor.C.rotate(-amount*4300,false);
     }
     public void ThrowBallsC(int amount)
     {
         Motor.C.setSpeed(Motor.C.getMaxSpeed());
-        Motor.C.rotate(amount*1800, false);
+        Motor.C.rotate(amount*4300, true);
     }
 
     public void ReleaseBallsD()
     {
-        Motor.D.setSpeed(500);
+        Motor.D.setSpeed(Motor.D.getMaxSpeed());
         Motor.D.forward();
     }
 
