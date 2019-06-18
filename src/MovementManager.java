@@ -138,7 +138,7 @@ public class MovementManager {
 
     public double distanceToGoal(){
         Point goalPoint = new Point();//((ComputerVision)cv).getGoalsLocation();
-        goalPoint= new Point(600, 240);
+        goalPoint= new Point(640, 240);
         return calcDistance(((ComputerVision)cv).getRobotLocation(),goalPoint);
     }
 

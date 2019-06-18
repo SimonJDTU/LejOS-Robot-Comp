@@ -95,14 +95,14 @@ public class ComputerVision extends JPanel implements IComputerVision, Runnable 
                 Imgproc.cvtColor(frame, cornerImage, COLOR_BGR2RGB);
                 Imgproc.cvtColor(cornerImage, cornerImage, COLOR_RGB2GRAY);
                 Imgproc.medianBlur(cornerImage, cornerImage, 7);
-
                 inRange(cornerImage, new Scalar(10, 10 , 10), new Scalar(60, 60 ,60), cornerImage);
+
                 // New Mat to detect colors
                 Imgproc.cvtColor(frame, tempImage1, COLOR_BGR2HSV);
                 Mat tempImage8 = tempImage1.clone();
                 Core.normalize(tempImage, tempImage1, 10, 200, Core.NORM_MINMAX, CV_8UC1);
 
-                //????????????????? goal??
+
 
                 tempImage = frame.clone();
 
