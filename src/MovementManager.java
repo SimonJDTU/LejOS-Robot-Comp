@@ -34,7 +34,6 @@ public class MovementManager {
 
         do {
             if (ballCaught >= 3 ||(numberOfBalls()==0 && ballCaught>0)) {
-
                 System.out.println("Goal delivery hit");
                 for (int i = 0; i < 10; i++) {
                     cv.run();
@@ -55,11 +54,18 @@ public class MovementManager {
                     cv.run();
                 }
                 closetsBall = getClosestBall();
+                cv.cleanPath(closetsBall);
                 robotLocation = cv.getRobotLocation();
                 if (cv.ballsCloseToEdge(closetsBall) == null) {
                     turnDegrees(calcAngle(robotLocation, closetsBall));
+                    for (int i = 0; i < 10; i++) {
+                        cv.run();
+                    }
                     if (calcDistance(robotLocation, closetsBall) >= 20) {
                         moveDistance(calcDistance(robotLocation, closetsBall), 0, 15);
+                        for (int i = 0; i < 10; i++) {
+                            cv.run();
+                        }
                     }
 
                     for (int i = 0; i < 10; i++) {
@@ -68,6 +74,9 @@ public class MovementManager {
                     closetsBall = getClosestBall();
                     robotLocation = ((ComputerVision) cv).getRobotLocation();
                     turnDegrees(calcAngle(robotLocation, closetsBall));
+                    for (int i = 0; i < 10; i++) {
+                        cv.run();
+                    }
                     moveDistance(calcDistance(robotLocation, closetsBall), 15, 0);
                     client.sendMessage("6-20");
                     waitForRobot();
@@ -75,16 +84,31 @@ public class MovementManager {
                     ballCaught++;
                 } else {
                     turnDegrees(calcAngle(robotLocation, closetsBall));
+                    for (int i = 0; i < 10; i++) {
+                        cv.run();
+                    }
                     if (calcDistance(robotLocation, closetsBall) >= 20) {
                         moveDistance(calcDistance(robotLocation, closetsBall), 0, 0);
+                        for (int i = 0; i < 10; i++) {
+                            cv.run();
+                        }
                     }
                     for (int i = 0; i < 10; i++) {
                         cv.run();
                     }
                     closetsBall = getClosestBall();
                     robotLocation = ((ComputerVision) cv).getRobotLocation();
+                    for (int i = 0; i < 10; i++) {
+                        cv.run();
+                    }
                     turnDegrees(calcAngle(robotLocation, closetsBall));
+                    for (int i = 0; i < 10; i++) {
+                        cv.run();
+                    }
                     moveDistance(calcDistance(robotLocation, closetsBall), 13, 0);
+                    for (int i = 0; i < 10; i++) {
+                        cv.run();
+                    }
 
                     ballCaught++;
                 }
