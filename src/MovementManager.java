@@ -1,4 +1,5 @@
 import org.opencv.core.Point;
+import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
 
@@ -9,76 +10,88 @@ public class MovementManager {
     private Client client;
     private int PORT_CONNECTION=5000;
     private String IP_C0NNECTION="192.168.137.208";
-    private Runnable cv = new ComputerVision();
-    private Thread thread = new Thread(cv);
-
-    MovementManager() {
-        this.client = new Client(IP_C0NNECTION, PORT_CONNECTION);
+   private  ComputerVision cv = new ComputerVision();
+    private boolean goToEdgeBall = true;
+    private  int ballCaught = 0;
+    private  boolean finalGo = false;
+    MovementManager()
+    {
+        //this.client = new Client();
+        //this.client.startConnection(IP_C0NNECTION, PORT_CONNECTION);
     }
-
     //TODO: set up waiting system, instead of taking images.
     void run() {
-        int ballCaught = 0;
+
         Point closetsBall;
         ArrayList<Point>  robotLocation;
 
-        thread.start();
-
-        try {
-            Thread.sleep(2500);
-        }catch (InterruptedException e){
-            e.printStackTrace();
+        for(int i = 0; i < 10; i++) {
+            cv.run();
         }
 
         do{
             if (ballCaught>=3) {
                 System.out.println("Goal delivery hit");
+                for(int i = 0; i < 10; i++) {
+                    cv.run();
+                }
                 turnDegrees(angleToGoal());
-                moveDistance(distanceToGoal());
-                try {
-                    Thread.sleep(10000);
-                }catch (InterruptedException e){
-                    e.printStackTrace();
+                moveDistanceGoal(distanceToGoal());
+
+                for(int i = 0; i < 10; i++) {
+                    cv.run();
                 }
                 turnDegrees(turnToFaceGoal());
                 client.sendMessage("4");
-                try {
-                    Thread.sleep(15000);
-                }catch (InterruptedException e){
-                    e.printStackTrace();
-                }
+                waitForRobot();
                 ballCaught=0;
             } else {
                 //TODO: Make it so it recalculates the angle and distance close to the ball
+                for(int i = 0; i < 10; i++) {
+                    cv.run();
+                }
                 closetsBall = getClosestBall();
                 robotLocation = ((ComputerVision)cv).getRobotLocation();
                 turnDegrees(calcAngle(robotLocation,closetsBall));
                 moveDistance(calcDistance(robotLocation,closetsBall));
-                try {
-                    Thread.sleep(10000);
-                }catch (InterruptedException e){
-                    e.printStackTrace();
-                }
                 ballCaught++;
+                cv.run();
             }
         }while (!(numberOfBalls()==0));
-        ((ComputerVision)cv).setProgramRunning(false);
         System.out.println("Program ended");
+    }
+
+    private void waitForRobot(){
+        while(true){
+            String message = client.readMessage();
+            if(message != null){
+                break;
+            }
+        }
     }
 
     private void moveDistance(double distance) {
         System.out.println("****************");
         System.out.println("Driving Length: "+distance);
-        System.out.println("****************");
         String command;
-        command = "1-" + (int) ((distance - 30) / 3.844);
+        command = "1-" + (int) ((distance / 3.844)-18);
         client.sendMessage(command);
+        waitForRobot();
     }
+
+    private void moveDistanceGoal(double distance) {
+        System.out.println("****************");
+        System.out.println("Driving Length: "+distance);
+        String command;
+        command = "1-" + (int) (distance / 3.844);
+        client.sendMessage(command);
+        waitForRobot();
+    }
+
 
     private void turnDegrees(double[] degrees) {
         System.out.println("****************");
         System.out.println("Turning degrees: "+degrees[0]);
-        System.out.println("****************");
         String command;
         if (degrees[1] == 1) {
             //turn left
@@ -87,6 +100,7 @@ public class MovementManager {
             command = "2-" + (int) degrees[0];
         }
         client.sendMessage(command);
+        waitForRobot();
     }
 
     //returns a double array which contains the degrees of turn to match the vectors and whether it's positive or negative
@@ -129,7 +143,18 @@ public class MovementManager {
                 returnPoint=ball;
             }
         }
-        return returnPoint;
+        Point edgeBall = ((ComputerVision) cv).ballsCloseToEdge(returnPoint);
+        if(edgeBall != null && goToEdgeBall && !finalGo){
+            goToEdgeBall = false;
+            finalGo = true;
+            return edgeBall;
+        }else{
+            finalGo = false;
+            goToEdgeBall = true;
+            ballCaught++;
+            return returnPoint;
+        }
+
     }
 
     private double calcDistance(ArrayList<Point> robotPoint, Point goal){
@@ -138,13 +163,13 @@ public class MovementManager {
 
     public double distanceToGoal(){
         Point goalPoint = new Point();//((ComputerVision)cv).getGoalsLocation();
-        goalPoint= new Point(640, 240);
+        goalPoint= new Point(540, 240);
         return calcDistance(((ComputerVision)cv).getRobotLocation(),goalPoint);
     }
 
     public double[] angleToGoal(){
         Point goalLocation = new Point(); //(ComputerVision)cv).getGoalsLocation();
-        goalLocation= new Point(600, 240);
+        goalLocation= new Point(680, 240);
         return calcAngle(((ComputerVision)cv).getRobotLocation(),goalLocation);
     }
 
