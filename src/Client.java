@@ -1,58 +1,53 @@
-// A Java program for a Client
 import java.net.*;
 import java.io.*;
 
 public class Client
 {
-    // initialize socket and input output streams
-    private Socket socket            = null;
-    private DataInputStream  input   = null;
-    private DataOutputStream out     = null;
+    private Socket clientSocket;
+    private PrintWriter out;
+    private BufferedReader in;
 
-    // constructor to put ip address and port
-    public Client(String address, int port)
+    public void startConnection(String ip, int port){
+        try {
+            clientSocket = new Socket(ip, port);
+            out = new PrintWriter(clientSocket.getOutputStream(), true);
+            in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        }
+        catch(IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public void sendMessage(String msg){
+        out.println(msg);
+    }
+
+    public void stopConnection(){
+        try {
+            in.close();
+            out.close();
+            clientSocket.close();
+        }
+        catch(IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+    public String readMessage()
     {
-        // establish a connection
-        try
-        {
-            socket = new Socket(address, port);
-            System.out.println("Connected");
 
-            // takes input from terminal
-            //input  = new DataInputStream(System.in);
-
-            // sends output to the socket
-            out    = new DataOutputStream(socket.getOutputStream());
+        String resp = "";
+        try{
+            while ((resp = in.readLine()) != null)
+            {
+                return resp;
+            }
         }
-        catch(UnknownHostException u)
+        catch(IOException e)
         {
-            System.out.println(u);
+            e.printStackTrace();
         }
-        catch(IOException i)
-        {
-            i.printStackTrace();
-        }
-
-        // string to read message from input
-       // String line = "";
-
-        // keep reading until "Over" is input
-        // close the connection
-
-    }
-
-    public void sendMessage(String line){
-        try
-        {
-            out.writeUTF(line);
-        }
-        catch(IOException i)
-        {
-            i.printStackTrace();
-        }
-
-    }
-    public void recieveMessage(){
-
+        return resp;
     }
 }

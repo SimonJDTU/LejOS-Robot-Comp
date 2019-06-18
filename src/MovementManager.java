@@ -8,12 +8,14 @@ public class MovementManager {
 
     private Client client;
     private int PORT_CONNECTION=5000;
-    private String IP_C0NNECTION="192.168.137.208";
+    private String IP_C0NNECTION="192.168.137.72";
     private Runnable cv = new ComputerVision();
     private Thread thread = new Thread(cv);
 
-    MovementManager() {
-        this.client = new Client(IP_C0NNECTION, PORT_CONNECTION);
+    MovementManager()
+    {
+        this.client = new Client();
+        this.client.startConnection(IP_C0NNECTION, PORT_CONNECTION);
     }
 
     //TODO: set up waiting system, instead of taking images.
@@ -24,29 +26,29 @@ public class MovementManager {
 
         thread.start();
 
-        try {
+        /*try {
             Thread.sleep(2500);
         }catch (InterruptedException e){
             e.printStackTrace();
-        }
+        }*/
 
         do{
             if (ballCaught>=3) {
                 System.out.println("Goal delivery hit");
                 turnDegrees(angleToGoal());
                 moveDistance(distanceToGoal());
-                try {
+                /*try {
                     Thread.sleep(10000);
                 }catch (InterruptedException e){
                     e.printStackTrace();
-                }
+                }*/
                 turnDegrees(turnToFaceGoal());
                 client.sendMessage("4");
-                try {
+                /*try {
                     Thread.sleep(15000);
                 }catch (InterruptedException e){
                     e.printStackTrace();
-                }
+                }*/
                 ballCaught=0;
             } else {
                 //TODO: Make it so it recalculates the angle and distance close to the ball
@@ -54,16 +56,25 @@ public class MovementManager {
                 robotLocation = ((ComputerVision)cv).getRobotLocation();
                 turnDegrees(calcAngle(robotLocation,closetsBall));
                 moveDistance(calcDistance(robotLocation,closetsBall));
-                try {
+                /*try {
                     Thread.sleep(10000);
                 }catch (InterruptedException e){
                     e.printStackTrace();
-                }
+                }*/
                 ballCaught++;
             }
         }while (!(numberOfBalls()==0));
         ((ComputerVision)cv).setProgramRunning(false);
         System.out.println("Program ended");
+    }
+
+    private void waitForRobot(){
+        while(true){
+            String message = client.readMessage();
+            if(message != null){
+                break;
+            }
+        }
     }
 
     private void moveDistance(double distance) {
@@ -73,6 +84,7 @@ public class MovementManager {
         String command;
         command = "1-" + (int) ((distance - 30) / 3.844);
         client.sendMessage(command);
+        waitForRobot();
     }
 
     private void turnDegrees(double[] degrees) {
@@ -87,6 +99,7 @@ public class MovementManager {
             command = "2-" + (int) degrees[0];
         }
         client.sendMessage(command);
+        waitForRobot();
     }
 
     //returns a double array which contains the degrees of turn to match the vectors and whether it's positive or negative
