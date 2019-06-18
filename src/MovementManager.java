@@ -6,10 +6,11 @@ import java.util.ArrayList;
 to calculate distances and angles to turn, where it afterwards sends the commands to the robot. */
 public class MovementManager {
 
-    private IComputerVision cv = new ComputerVision();
     private Client client;
     private int PORT_CONNECTION=5000;
-    private String IP_C0NNECTION="192.168.43.181";
+    private String IP_C0NNECTION="192.168.137.208";
+    private Runnable cv = new ComputerVision();
+    private Thread thread = new Thread(cv);
 
     MovementManager() {
         this.client = new Client(IP_C0NNECTION, PORT_CONNECTION);
@@ -21,38 +22,69 @@ public class MovementManager {
         Point closetsBall;
         ArrayList<Point>  robotLocation;
 
-        cv.run();
+        thread.start();
+
+        try {
+            Thread.sleep(2500);
+        }catch (InterruptedException e){
+            e.printStackTrace();
+        }
+
         do{
             if (ballCaught>=3) {
-                delieverToGoal();
+                System.out.println("Goal delivery hit");
+                turnDegrees(angleToGoal());
+                moveDistance(distanceToGoal());
+                try {
+                    Thread.sleep(10000);
+                }catch (InterruptedException e){
+                    e.printStackTrace();
+                }
+                turnDegrees(turnToFaceGoal());
+                client.sendMessage("4");
+                try {
+                    Thread.sleep(15000);
+                }catch (InterruptedException e){
+                    e.printStackTrace();
+                }
                 ballCaught=0;
             } else {
                 //TODO: Make it so it recalculates the angle and distance close to the ball
                 closetsBall = getClosestBall();
-                robotLocation = cv.getRobotLocation();
+                robotLocation = ((ComputerVision)cv).getRobotLocation();
                 turnDegrees(calcAngle(robotLocation,closetsBall));
                 moveDistance(calcDistance(robotLocation,closetsBall));
+                try {
+                    Thread.sleep(10000);
+                }catch (InterruptedException e){
+                    e.printStackTrace();
+                }
                 ballCaught++;
             }
         }while (!(numberOfBalls()==0));
-        this.cv.setProgramRunning(false);
+        ((ComputerVision)cv).setProgramRunning(false);
         System.out.println("Program ended");
     }
 
     private void moveDistance(double distance) {
+        System.out.println("****************");
+        System.out.println("Driving Length: "+distance);
+        System.out.println("****************");
         String command;
         command = "1-" + (int) ((distance - 30) / 3.844);
-        //command = "1-30";
         client.sendMessage(command);
     }
 
     private void turnDegrees(double[] degrees) {
+        System.out.println("****************");
+        System.out.println("Turning degrees: "+degrees[0]);
+        System.out.println("****************");
         String command;
-        if (degrees[0] == 1) {
+        if (degrees[1] == 1) {
             //turn left
-            command = "3-" + (int) degrees[1];
+            command = "3-" + (int) degrees[0];
         } else {
-            command = "2-" + (int) degrees[1];
+            command = "2-" + (int) degrees[0];
         }
         client.sendMessage(command);
     }
@@ -82,15 +114,15 @@ public class MovementManager {
     }
 
     private int numberOfBalls(){
-        return cv.getBallsLocation().size();
+        return ((ComputerVision)cv).getBallsLocation().size();
     }
 
     private Point getClosestBall(){
         //it is assumes that the back of the robot is the center.
-        ArrayList<Point> robotPoint=cv.getRobotLocation();
+        ArrayList<Point> robotPoint=((ComputerVision)cv).getRobotLocation();
         Point returnPoint = new Point(340,240);
         double minDist = 1000000;
-        for(Point ball : cv.getBallsLocation()){
+        for(Point ball : ((ComputerVision)cv).getBallsLocation()){
             double distance = Math.sqrt(Math.pow(ball.x-robotPoint.get(0).x, 2) + Math.pow(ball.y - robotPoint.get(0).y, 2));
             if(distance < minDist){
                 minDist = distance;
@@ -104,11 +136,20 @@ public class MovementManager {
         return Math.sqrt(Math.pow(goal.x - robotPoint.get(0).x, 2) + Math.pow(goal.y - robotPoint.get(0).y, 2));
     }
 
-    //TODO: calculate the closets goal and take action accordingly
-    //TODO: add so that we go to a point near the goal and turn to deliever the balls.
-    public void delieverToGoal(){
-        //Point DeliveryPoint = new Point(0, 480.0/2.0);
-        double[] directions=calcAngle(cv.getRobotLocation(), cv.getGoalsLocation());
-        //goal.x += 70;
+    public double distanceToGoal(){
+        Point goalPoint = new Point();//((ComputerVision)cv).getGoalsLocation();
+        goalPoint= new Point(600, 240);
+        return calcDistance(((ComputerVision)cv).getRobotLocation(),goalPoint);
     }
+
+    public double[] angleToGoal(){
+        Point goalLocation = new Point(); //(ComputerVision)cv).getGoalsLocation();
+        goalLocation= new Point(600, 240);
+        return calcAngle(((ComputerVision)cv).getRobotLocation(),goalLocation);
+    }
+
+    public double[] turnToFaceGoal(){
+        return calcAngle(((ComputerVision)cv).getRobotLocation(),((ComputerVision)cv).getGoalsLocation());
+    }
+
 }

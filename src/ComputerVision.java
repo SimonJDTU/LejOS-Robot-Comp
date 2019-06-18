@@ -1,6 +1,5 @@
 import nu.pattern.OpenCV;
 import org.opencv.calib3d.Calib3d;
-import org.opencv.core.Point;
 import org.opencv.core.*;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgproc.Imgproc;
@@ -20,6 +19,7 @@ public class ComputerVision extends JPanel implements IComputerVision, Runnable 
 
     private Point frontCenter = new Point(), backCenter = new Point(), lastPositionFront = new Point(), lastPositionBack = new Point(), goal2 = new Point();
     private ArrayList<Point> ballsLocation = new ArrayList<>();
+    private ArrayList<Point> balls = new ArrayList<>();
     private static ArrayList<ArrayList<Point>> ballConsistency = new ArrayList<>();
     private Mat frame;
     private VideoCapture camera;
@@ -47,7 +47,7 @@ public class ComputerVision extends JPanel implements IComputerVision, Runnable 
         // Capturing from usb Camera
         // Camera has to be 142-143 from the ground.
         // USB CAM index 4 , own is 0
-        camera = new VideoCapture(0);
+        camera = new VideoCapture(4);
         //camera.open("/dev/v41/by-id/usb-046d_Logitech_Webcam_C930e_DDCF656E-video-index0");
 
         // Set resolution
@@ -80,14 +80,11 @@ public class ComputerVision extends JPanel implements IComputerVision, Runnable 
         Mat cornerImage = new Mat();
         MatOfPoint2f cornersOfFrame, cornersOfTrack;
         Mat circles = new Mat();
-        Mat fromtcircles = new Mat();
+        Mat frontCircles = new Mat();
         Mat backcircles = new Mat();
-        ArrayList<Point> corners = new ArrayList<>();
-
-
-        if (camera.read(frame)) {
-
+        ArrayList<Point> corners;
             do {
+                if (camera.read(frame)) {
 
                 // Convert color for ball detection
 
@@ -95,79 +92,84 @@ public class ComputerVision extends JPanel implements IComputerVision, Runnable 
                 //Imgproc.medianBlur(tempImage, tempImage, 11);
 
                 // Normalize the image to increase and improve ball detection
-
-                // Use HoughCircels to mark the balls
-
-                Imgproc.cvtColor(frame, cornerImage, COLOR_BGR2GRAY);
+                Imgproc.cvtColor(frame, cornerImage, COLOR_BGR2RGB);
+                Imgproc.cvtColor(cornerImage, cornerImage, COLOR_RGB2GRAY);
                 Imgproc.medianBlur(cornerImage, cornerImage, 7);
-                Core.normalize(cornerImage, cornerImage, 10, 200, Core.NORM_MINMAX, CV_8UC1);
 
+                inRange(cornerImage, new Scalar(10, 10 , 10), new Scalar(60, 60 ,60), cornerImage);
                 // New Mat to detect colors
                 Imgproc.cvtColor(frame, tempImage1, COLOR_BGR2HSV);
                 Mat tempImage8 = tempImage1.clone();
                 Core.normalize(tempImage, tempImage1, 10, 200, Core.NORM_MINMAX, CV_8UC1);
 
-                inRange(cornerImage, new Scalar(5, 5, 5), new Scalar(46, 46, 46), cornerImage);
-                try {
-                    corners = detectCorners(cornerImage);
-                } catch (IndexOutOfBoundsException e) {
-                    System.out.println("unlucky");
-                }
-                // SMALL
-                inRange(tempImage1, new Scalar(35, 45, 225), new Scalar(60, 75, 255), tempImage3);
+                //????????????????? goal??
 
-                //Homography warp
-                cornersOfTrack = new MatOfPoint2f(corners.get(0), corners.get(1), corners.get(2), corners.get(3));
-                cornersOfFrame = new MatOfPoint2f(new Point(0, 0), new Point(640, 0), new Point(0, 480), new Point(640, 480));
-                matHomography = Calib3d.findHomography(cornersOfTrack, cornersOfFrame, Calib3d.RANSAC, 4); //Calib3d.RANSAC
-                warpPerspective(frame, frame, matHomography, frame.size());
                 tempImage = frame.clone();
-
 
                 Imgproc.cvtColor(frame, tempImage, COLOR_BGR2GRAY);
                 Core.normalize(tempImage, tempImage, 60, 200, Core.NORM_MINMAX, CV_8UC1);
 
-
-                // HoughCircles to detect circles - to find TTBalls.
+                // Detect balls
                 Imgproc.HoughCircles(tempImage, circles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows() / 100, 50.0, 20.0, 4, 9);  // save values 50, 50, 25,10,23
 
-                // Detect circels on Robot
-                Imgproc.HoughCircles(tempImage, fromtcircles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows() / 100, 50.0, 19.0, 10, 15);  // save values 50, 50, 25,10,23
+                // Detect Robot
+                Imgproc.HoughCircles(tempImage, frontCircles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows() / 100, 50.0, 19.0, 10, 15);  // save values 50, 50, 25,10,23
                 Imgproc.HoughCircles(tempImage, backcircles, Imgproc.HOUGH_GRADIENT, 1, (double) tempImage.rows() / 100, 50.0, 19.0, 15, 30);  // save values 50, 50, 25,10,23
+                try {
+                    double[] c = backcircles.get(0, 0);
+                    backCenter = new Point(Math.round(c[0]), Math.round(c[1]));
+                    Imgproc.circle(frame, backCenter, 1, new Scalar(0, 100, 100), 3, 8, 0);
+                    lastPositionBack = backCenter;
+                } catch (NullPointerException e) {
+                    backCenter = lastPositionBack;
+                }
+
+                try {
+                    double[] c;
+                    c = frontCircles.get(0, 0);
+                    frontCenter = new Point(Math.round(c[0]), Math.round(c[1]));
+                    Imgproc.circle(frame, frontCenter, 1, new Scalar(0, 100, 100), 3, 8, 0);
+                    lastPositionFront = frontCenter;
+                } catch (NullPointerException e) {
+                    //System.out.println("no circle found");
+                    frontCenter = lastPositionFront;
+                }
 
 
                 Imgproc.cvtColor(frame, tempImage5, COLOR_BGR2HSV);
 
                 //Core.inRange(tempImage2,new Scalar(0,0,0),new Scalar(250,250,180),tempImage2);
-                //borders
+                //Detect borders ???
                 inRange(tempImage1, new Scalar(0, 170, 170), new Scalar(190, 255, 255), tempImage2);
 
-                // Goals
-                // SMALL
+                //Detect the smallGoal
+                    Imgproc.cvtColor(frame, tempImage3, COLOR_BGR2HSV);
+                    Imgproc.medianBlur(tempImage3, tempImage3, 7);
+                    inRange(tempImage3, new Scalar(20, 100, 230), new Scalar(50, 135, 255), combined);
 
-                // BIG
 
-                inRange(tempImage8, new Scalar(25, 80, 245), new Scalar(40, 100, 255), combined);
-                HighGui.imshow("after", combined);
-                // Detect Corners
+                //HighGui.imshow("HSv_combined", combined);
+                //inRange(tempImage8, new Scalar(25, 80, 245), new Scalar(40, 100, 255), combined);
 
-                //Colorize circels
+                //Colorize circles
+                ballsLocation.clear();
+                balls.clear();
+
                 for (int i = 0; i < circles.cols(); i++) {
                     double[] c = circles.get(0, i);
                     Point center = new Point(Math.round(c[0]), Math.round(c[1]));
                     ballsLocation.add(center);
-
                 }
+
                 ballConsistency.add(0, ballsLocation);
                 if (ballConsistency.size() >= 10) {
                     ballConsistency.remove(ballConsistency.size() - 1);
                 }
-                ArrayList<Point> balls = new ArrayList<>();
 
                 for (ArrayList<Point> points : ballConsistency) {
-                    for (int j = 0; j < points.size(); j++) {
-                        if (!balls.contains(points.get(j))) {
-                            balls.add(points.get(j));
+                    for (Point point : points) {
+                        if (!balls.contains(point)) {
+                            balls.add(point);
                         }
                     }
                 }
@@ -185,35 +187,16 @@ public class ComputerVision extends JPanel implements IComputerVision, Runnable 
                     circle(frame, ball, 1, new Scalar(255, 100, 100), 7, 8, 0);
                 }
 
-                try {
 
-                    double[] c = backcircles.get(0, 0);
-                    backCenter = new Point(Math.round(c[0]), Math.round(c[1]));
-                    Imgproc.circle(frame, backCenter, 1, new Scalar(0, 100, 100), 3, 8, 0);
-                    lastPositionBack = backCenter;
-                } catch (NullPointerException e) {
-                    backCenter = lastPositionBack;
-                }
-                try {
-                    double[] c = backcircles.get(0, 0);
-                    c = fromtcircles.get(0, 0);
-                    frontCenter = new Point(Math.round(c[0]), Math.round(c[1]));
-                    Imgproc.circle(frame, frontCenter, 1, new Scalar(0, 100, 100), 3, 8, 0);
-                    lastPositionFront = frontCenter;
-                } catch (NullPointerException e) {
-                    //System.out.println("no circle found");
-                    frontCenter = lastPositionFront;
-                }
-
-                ArrayList<Point> avgRobotFront = new ArrayList<Point>();
-                final ArrayList<Point> avgRobotBack = new ArrayList<Point>();
-                Point avgGoal2 = new Point();
-                Point goal = new Point();
-                //Point goal2 = new Point();
                 ArrayList<Double> meanForGoal2x = new ArrayList<>();
                 ArrayList<Double> meanForGoal2y = new ArrayList<>();
-                for (int i = 0; i < tempImage.rows(); i++) {
-                    for (int j = 0; j < tempImage.cols(); j++) {
+                for (int i = 0; i < tempImage3.rows(); i++) {
+                    for (int j = 0; j < tempImage3.cols(); j++) {
+
+                                /*if (tempImage2.get(i, j)[0] == 255) {
+                                    combined.put(i, j, tempImage2.get(i, j)[0]);
+                                    borders = new Point(j,i);
+                                }*/
 
                                 /*if (tempImage3.get(i, j)[0] == 255) {
                                     combined.put(i, j, tempImage3.get(i, j)[0] );
@@ -227,12 +210,7 @@ public class ComputerVision extends JPanel implements IComputerVision, Runnable 
                             meanForGoal2x.add(goal2.x);
                             meanForGoal2y.add(goal2.y);
                         }
-
-
-
                     }
-
-
                 }
 
                 try {
@@ -240,43 +218,28 @@ public class ComputerVision extends JPanel implements IComputerVision, Runnable 
                     Collections.sort(meanForGoal2y);
                     goal2.x = meanForGoal2x.get(meanForGoal2x.size() / 2);
                     goal2.y = meanForGoal2y.get(meanForGoal2y.size() / 2);
+                    Imgproc.line(frame, goal2, goal2, new Scalar(250, 0, 0), 5);
                 } catch (IndexOutOfBoundsException e) {
-                    //System.out.println("oops");
+                    e.printStackTrace();
+                }
+
+                //Detect corners and do homography warp
+                try {
+                    corners = detectCorners(cornerImage);
+                    cornersOfTrack = new MatOfPoint2f(corners.get(0), corners.get(1), corners.get(2), corners.get(3));
+                    cornersOfFrame = new MatOfPoint2f(new Point(0, 0), new Point(640, 0), new Point(0, 480), new Point(640, 480));
+                    warpPerspective(frame, frame, Calib3d.findHomography(cornersOfTrack, cornersOfFrame, Calib3d.RANSAC, 4), frame.size());
+                } catch (IndexOutOfBoundsException e) {
+                    System.out.println("unlucky");
                 }
 
 
-                        /*Point robotVector = new Point(frontCenter.x - backCenter.x, frontCenter.y - backCenter.y);
-                        Point bigGoalVector = new Point(goal2.x - frontCenter.x, goal2.y - frontCenter.y);
-                        Imgproc.line(frame, goal2, backCenter,  new Scalar(250,0,0), 5);
-                        Point a = robotVector;
-                        Point b = bigGoalVector;
-                        double dotProduct = (a.x*b.x)+(a.y*b.y);
-                        double magnitudeOfA = Math.sqrt(Math.pow(a.x,2)+Math.pow(a.y,2));
-                        double magnitudeOfB = Math.sqrt(Math.pow(b.x,2)+Math.pow(b.y,2));
-                        Goalangle = Math.toDegrees(Math.acos(dotProduct/(magnitudeOfA*magnitudeOfB)));*/
-
-                //getDirection();
-
-                           /* Goalangle = Math.toDegrees(Math.cos((robotVector.x*bigGoalVector.x + robotVector.y*bigGoalVector.y)/
-                                   (Math.sqrt(Math.pow(robotVector.x,2)+Math.pow(robotVector.y,2)))
-                                           * Math.sqrt(Math.pow(bigGoalVector.x,2)*Math.pow(bigGoalVector.y,2))));*/
-
-
-
-            /*if (frame.empty()) {
-                System.out.println("1");
-            }
-            if (frame.type() == CV_8UC1) {
-                System.out.println("2");
-            }*/
-
-
+                //HighGui.imshow("HSV", tempImage5);
                 showGUI(cornerImage, combined);
+                }
             } while (programRunning);
             System.out.println("ComputerVision ended");
-        }
     }
-
     public void drawOnImages(Point point1, Point point2, Scalar color) {
 
         Imgproc.line(frame, point1, point2, color, 5);
@@ -285,9 +248,9 @@ public class ComputerVision extends JPanel implements IComputerVision, Runnable 
 
     private void showGUI(Mat cornerImage, Mat combined){
         HighGui.imshow("SHIET SON", frame);
-        HighGui.imshow("whatever2", cornerImage);
+        //HighGui.imshow("whatever2", cornerImage);
         HighGui.imshow("whatever4", combined);
-        //HighGui.imshow("whatever", tempImage);
+        //hGui.imshow("whatever", tempImage);
         //HighGui.imshow("whatever3", tempImage3);
         //HighGui.imshow("whatever5",tempImage5);
         HighGui.waitKey(1);
@@ -307,7 +270,7 @@ public class ComputerVision extends JPanel implements IComputerVision, Runnable 
         for (int i = 0; i < 50; i++) {
             for (int j = 0; j < 50; j++) {
                 if (cornerImage.get(i, j)[0] == 255) {
-                    upperLeftCorner = new Point(i, j);
+                    upperLeftCorner = new Point(j, i);
                     medianX.add(upperLeftCorner.x);
                     medianY.add(upperLeftCorner.y);
                 }
@@ -352,11 +315,12 @@ public class ComputerVision extends JPanel implements IComputerVision, Runnable 
         }
         Collections.sort(medianX);
         Collections.sort(medianY);
-        upperLeftCorner.x = medianX.get(medianX.size() / 2);
-        upperLeftCorner.y = medianY.get(medianY.size() / 2);
+        lowerLeftCorner.x = medianX.get(medianX.size() / 2);
+        lowerLeftCorner.y = medianY.get(medianY.size() / 2);
         corners.add(lowerLeftCorner);
         medianX.clear();
         medianY.clear();
+
         //lower right corner
         for (int i = cornerImage.cols() - 50; i < cornerImage.cols(); i++) {
             for (int j = cornerImage.rows() - 50; j < cornerImage.rows(); j++) {
@@ -374,6 +338,7 @@ public class ComputerVision extends JPanel implements IComputerVision, Runnable 
         corners.add(lowerRightCorner);
 
         Scalar color = new Scalar(0,0,250);
+
         drawOnImages(upperLeftCorner,upperRightCorner,color);
         drawOnImages(upperRightCorner,lowerRightCorner,color);
         drawOnImages(lowerRightCorner,lowerLeftCorner,color);
@@ -384,7 +349,7 @@ public class ComputerVision extends JPanel implements IComputerVision, Runnable 
     }
 
     public ArrayList<Point> getBallsLocation() {
-        return ballsLocation;
+        return balls;
     }
 
     public ArrayList<Point> getRobotLocation() {
