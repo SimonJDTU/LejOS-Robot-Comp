@@ -424,22 +424,22 @@ public class ComputerVision extends JPanel implements IComputerVision {
             closeToEdge.y = currentBall.y-safetyDistance;
             return closeToEdge;
             //bottom
-        } else if(currentBall.y > 440){
+        } else if(currentBall.y > 380){
             closeToEdge.x = currentBall.x;
             closeToEdge.y = currentBall.y-safetyDistance;
             return closeToEdge;
             //top
-        }else if(currentBall.y < 40){
+        }else if(currentBall.y < 100){
             closeToEdge.x = currentBall.x;
             closeToEdge.y = currentBall.y+safetyDistance;
             return closeToEdge;
             //left
-        }else if(currentBall.x < 40){
+        }else if(currentBall.x < 100){
             closeToEdge.x = currentBall.x+safetyDistance;
             closeToEdge.y = currentBall.y;
             return  closeToEdge;
 
-        }else if(currentBall.x > 600){
+        }else if(currentBall.x > 500){
             closeToEdge.x = currentBall.x-safetyDistance;
             closeToEdge.y = currentBall.y;
             return  closeToEdge;

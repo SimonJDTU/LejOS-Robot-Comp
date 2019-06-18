@@ -62,7 +62,7 @@ public class MovementManager {
 
                     if (calcDistance(cv.getRobotLocation(), closestBall) >= 20) {
                         processImages();
-                        moveDistance(calcDistance(cv.getRobotLocation(), cv.ballsCloseToEdge(closestBall)), 0, 0);
+                        moveDistance(calcDistance(cv.getRobotLocation(), cv.ballsCloseToEdge(closestBall)), 0, 5);
                     }
 
                     processImages();
@@ -82,7 +82,7 @@ public class MovementManager {
                     turnDegrees(calcAngle(cv.getRobotLocation(), closestBall));
                     if (calcDistance(cv.getRobotLocation(), closestBall) >= 20) {
                         processImages();
-                        moveDistance(calcDistance(cv.getRobotLocation(), closestBall), 0, 0);
+                        moveDistance(calcDistance(cv.getRobotLocation(), closestBall), 20, 0);
                     }
 
                     processImages();
