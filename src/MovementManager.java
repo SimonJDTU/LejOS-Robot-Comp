@@ -9,19 +9,18 @@ public class MovementManager {
 
     private Client client;
     private int PORT_CONNECTION=5000;
-    private String IP_C0NNECTION="192.168.137.9";
-    private ComputerVision cv = new ComputerVision();
-
-
+    private String IP_C0NNECTION="192.168.137.208";
+   private  ComputerVision cv = new ComputerVision();
+    private boolean goToEdgeBall = true;
+    private  int ballCaught = 0;
     MovementManager()
     {
         this.client = new Client();
         this.client.startConnection(IP_C0NNECTION, PORT_CONNECTION);
     }
-
     //TODO: set up waiting system, instead of taking images.
     void run() {
-        int ballCaught = 0;
+
         Point closetsBall;
         ArrayList<Point>  robotLocation;
 
@@ -153,7 +152,16 @@ public class MovementManager {
                 returnPoint=ball;
             }
         }
-        return returnPoint;
+        Point edgeBall = ((ComputerVision) cv).ballsCloseToEdge(returnPoint);
+        if(edgeBall != null && goToEdgeBall){
+            goToEdgeBall = false;
+            return edgeBall;
+        }else{
+            goToEdgeBall = true;
+            ballCaught++;
+            return returnPoint;
+        }
+
     }
 
     private double calcDistance(ArrayList<Point> robotPoint, Point goal){
