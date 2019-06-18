@@ -15,7 +15,7 @@ import static org.opencv.imgproc.Imgproc.*;
 import static org.opencv.videoio.Videoio.CV_CAP_PROP_FRAME_HEIGHT;
 import static org.opencv.videoio.Videoio.CV_CAP_PROP_FRAME_WIDTH;
 
-public class ComputerVision extends JPanel implements IComputerVision, Runnable {
+public class ComputerVision extends JPanel implements IComputerVision {
 
     private Point frontCenter = new Point(), backCenter = new Point(), lastPositionFront = new Point(), lastPositionBack = new Point(), goal2 = new Point();
     private ArrayList<Point> ballsLocation = new ArrayList<>();
@@ -23,7 +23,6 @@ public class ComputerVision extends JPanel implements IComputerVision, Runnable 
     private static ArrayList<ArrayList<Point>> ballConsistency = new ArrayList<>();
     private Mat frame;
     private VideoCapture camera;
-    private boolean programRunning = true;
 
     private final int SET_FRAME_WIDTH = 640, SET_FRAME_HEIGHT = 480;
 
@@ -47,7 +46,7 @@ public class ComputerVision extends JPanel implements IComputerVision, Runnable 
         // Capturing from usb Camera
         // Camera has to be 142-143 from the ground.
         // USB CAM index 4 , own is 0
-        camera = new VideoCapture(4);
+        camera = new VideoCapture(0);
         //camera.open("/dev/v41/by-id/usb-046d_Logitech_Webcam_C930e_DDCF656E-video-index0");
 
         // Set resolution
@@ -83,8 +82,8 @@ public class ComputerVision extends JPanel implements IComputerVision, Runnable 
         Mat frontCircles = new Mat();
         Mat backcircles = new Mat();
         ArrayList<Point> corners;
-            do {
-                if (camera.read(frame)) {
+
+            if (camera.read(frame)) {
 
                 // Convert color for ball detection
 
@@ -96,12 +95,21 @@ public class ComputerVision extends JPanel implements IComputerVision, Runnable 
                 Imgproc.cvtColor(cornerImage, cornerImage, COLOR_RGB2GRAY);
                 Imgproc.medianBlur(cornerImage, cornerImage, 7);
 
-                inRange(cornerImage, new Scalar(10, 10 , 10), new Scalar(60, 60 ,60), cornerImage);
+                inRange(cornerImage, new Scalar(10, 10, 10), new Scalar(60, 60, 60), cornerImage);
                 // New Mat to detect colors
                 Imgproc.cvtColor(frame, tempImage1, COLOR_BGR2HSV);
                 Mat tempImage8 = tempImage1.clone();
                 Core.normalize(tempImage, tempImage1, 10, 200, Core.NORM_MINMAX, CV_8UC1);
 
+                //Detect corners and do homography warp
+                try {
+                    corners = detectCorners(cornerImage);
+                    cornersOfTrack = new MatOfPoint2f(corners.get(0), corners.get(1), corners.get(2), corners.get(3));
+                    cornersOfFrame = new MatOfPoint2f(new Point(0, 0), new Point(640, 0), new Point(0, 480), new Point(640, 480));
+                    warpPerspective(frame, frame, Calib3d.findHomography(cornersOfTrack, cornersOfFrame, Calib3d.RANSAC, 4), frame.size());
+                } catch (IndexOutOfBoundsException e) {
+                    System.out.println("unlucky");
+                }
                 //????????????????? goal??
 
                 tempImage = frame.clone();
@@ -142,13 +150,6 @@ public class ComputerVision extends JPanel implements IComputerVision, Runnable 
                 //Detect borders ???
                 inRange(tempImage1, new Scalar(0, 170, 170), new Scalar(190, 255, 255), tempImage2);
 
-                //Detect the smallGoal
-                    Imgproc.cvtColor(frame, tempImage3, COLOR_BGR2HSV);
-                    Imgproc.medianBlur(tempImage3, tempImage3, 7);
-                    inRange(tempImage3, new Scalar(20, 100, 230), new Scalar(50, 135, 255), combined);
-
-
-                //HighGui.imshow("HSv_combined", combined);
                 //inRange(tempImage8, new Scalar(25, 80, 245), new Scalar(40, 100, 255), combined);
 
                 //Colorize circles
@@ -187,69 +188,23 @@ public class ComputerVision extends JPanel implements IComputerVision, Runnable 
                     circle(frame, ball, 1, new Scalar(255, 100, 100), 7, 8, 0);
                 }
 
-
-                ArrayList<Double> meanForGoal2x = new ArrayList<>();
-                ArrayList<Double> meanForGoal2y = new ArrayList<>();
-                for (int i = 0; i < tempImage3.rows(); i++) {
-                    for (int j = 0; j < tempImage3.cols(); j++) {
-
-                                /*if (tempImage2.get(i, j)[0] == 255) {
-                                    combined.put(i, j, tempImage2.get(i, j)[0]);
-                                    borders = new Point(j,i);
-                                }*/
-
-                                /*if (tempImage3.get(i, j)[0] == 255) {
-                                    combined.put(i, j, tempImage3.get(i, j)[0] );
-                                    goal = new Point(j, i);
-
-                                }*/
-
-                        if (combined.get(i, j)[0] == 255) {
-                            combined.put(i, j, combined.get(i, j)[0]);
-                            goal2 = new Point(j, i);
-                            meanForGoal2x.add(goal2.x);
-                            meanForGoal2y.add(goal2.y);
-                        }
-                    }
-                }
-
-                try {
-                    Collections.sort(meanForGoal2x);
-                    Collections.sort(meanForGoal2y);
-                    goal2.x = meanForGoal2x.get(meanForGoal2x.size() / 2);
-                    goal2.y = meanForGoal2y.get(meanForGoal2y.size() / 2);
-                    Imgproc.line(frame, goal2, goal2, new Scalar(250, 0, 0), 5);
-                } catch (IndexOutOfBoundsException e) {
-                    e.printStackTrace();
-                }
-
-                //Detect corners and do homography warp
-                try {
-                    corners = detectCorners(cornerImage);
-                    cornersOfTrack = new MatOfPoint2f(corners.get(0), corners.get(1), corners.get(2), corners.get(3));
-                    cornersOfFrame = new MatOfPoint2f(new Point(0, 0), new Point(640, 0), new Point(0, 480), new Point(640, 480));
-                    warpPerspective(frame, frame, Calib3d.findHomography(cornersOfTrack, cornersOfFrame, Calib3d.RANSAC, 4), frame.size());
-                } catch (IndexOutOfBoundsException e) {
-                    System.out.println("unlucky");
-                }
-
-
                 //HighGui.imshow("HSV", tempImage5);
-                showGUI(cornerImage, combined);
-                }
-            } while (programRunning);
+                showGUI(cornerImage);
+            } else {
+                System.out.println("No picture taken");
+            }
             System.out.println("ComputerVision ended");
-    }
+        }
     public void drawOnImages(Point point1, Point point2, Scalar color) {
 
         Imgproc.line(frame, point1, point2, color, 5);
 
     }
 
-    private void showGUI(Mat cornerImage, Mat combined){
+    private void showGUI(Mat cornerImage){
+        Imgproc.line(frame, new Point(540, 240), new Point(540, 240), new Scalar(0, 0, 255), 5);
         HighGui.imshow("SHIET SON", frame);
         //HighGui.imshow("whatever2", cornerImage);
-        HighGui.imshow("whatever4", combined);
         //hGui.imshow("whatever", tempImage);
         //HighGui.imshow("whatever3", tempImage3);
         //HighGui.imshow("whatever5",tempImage5);
@@ -365,7 +320,6 @@ public class ComputerVision extends JPanel implements IComputerVision, Runnable 
     }
 
     public void setProgramRunning(Boolean bool){
-        this.programRunning=bool;
     }
 
 }
