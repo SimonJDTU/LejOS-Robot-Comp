@@ -159,6 +159,7 @@ public class ComputerVision extends JPanel implements IComputerVision, Runnable 
             if (ballConsistency.size() >= 10) {
                 ballConsistency.remove(ballConsistency.size() - 1);
             }
+
             ArrayList<Point> balls = new ArrayList<>();
 
             for (ArrayList<Point> points : ballConsistency) {
