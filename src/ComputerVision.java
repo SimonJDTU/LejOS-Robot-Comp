@@ -1,4 +1,6 @@
 import nu.pattern.OpenCV;
+import org.bytedeco.javacpp.opencv_core;
+import org.bytedeco.javacpp.opencv_xfeatures2d;
 import org.opencv.calib3d.Calib3d;
 import org.opencv.core.*;
 import org.opencv.highgui.HighGui;

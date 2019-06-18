@@ -53,7 +53,17 @@ public class MovementManager {
                 closetsBall = getClosestBall();
                 robotLocation = ((ComputerVision)cv).getRobotLocation();
                 turnDegrees(calcAngle(robotLocation,closetsBall));
-                moveDistance(calcDistance(robotLocation,closetsBall));
+                if(calcDistance(robotLocation,closetsBall) >= 20)
+                moveDistance(calcDistance(robotLocation,closetsBall), 15);
+
+                for(int i = 0; i < 10; i++) {
+                    cv.run();
+                }
+                closetsBall = getClosestBall();
+                robotLocation = ((ComputerVision)cv).getRobotLocation();
+                turnDegrees(calcAngle(robotLocation,closetsBall));
+                moveDistance(calcDistance(robotLocation,closetsBall), 0);
+
                 ballCaught++;
                 cv.run();
             }
@@ -70,11 +80,11 @@ public class MovementManager {
         }
     }
 
-    private void moveDistance(double distance) {
+    private void moveDistance(double distance, double offset) {
         System.out.println("****************");
         System.out.println("Driving Length: "+distance);
         String command;
-        command = "1-" + (int) ((distance / 3.844)-18);
+        command = "1-" + (int) ((distance / 3.844)-15-offset);
         client.sendMessage(command);
         waitForRobot();
     }
