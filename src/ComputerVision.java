@@ -205,6 +205,7 @@ public class ComputerVision extends JPanel implements IComputerVision {
 
     private void showGUI(Mat cornerImage){
         Imgproc.line(frame, new Point(540, 240), new Point(540, 240), new Scalar(0, 0, 255), 5);
+        Imgproc.line(frame, new Point(100, 240), new Point(100, 240), new Scalar(255, 0, 0), 5);
         HighGui.imshow("SHIET SON", frame);
         //HighGui.imshow("whatever2", cornerImage);
         //hGui.imshow("whatever", tempImage);
@@ -316,11 +317,6 @@ public class ComputerVision extends JPanel implements IComputerVision {
         return robotLocation;
     }
 
-    //TODO: return both goal locations
-    public Point getGoalsLocation() {
-        return goal2;
-    }
-
     public void setProgramRunning(Boolean bool){
     }
 
@@ -354,12 +350,12 @@ public class ComputerVision extends JPanel implements IComputerVision {
             closeToEdge.y = currentBall.y+safetyDistance;
             return closeToEdge;
         }else if(currentBall.x < 100){
-            closeToEdge.x = currentBall.x;
-            closeToEdge.y = currentBall.y+safetyDistance;
+            closeToEdge.x = currentBall.x+safetyDistance;
+            closeToEdge.y = currentBall.y;
             return  closeToEdge;
         }else if(currentBall.x > 540){
-            closeToEdge.x = currentBall.x;
-            closeToEdge.y = currentBall.y-safetyDistance;
+            closeToEdge.x = currentBall.x-safetyDistance;
+            closeToEdge.y = currentBall.y;
             return  closeToEdge;
         }
         return null;
