@@ -137,14 +137,14 @@ public class MovementManager {
     }
 
     public double distanceToGoal(){
-        Point goalPoint = ((ComputerVision)cv).getGoalsLocation();
-        goalPoint.x= goalPoint.x+25;
+        Point goalPoint = new Point();//((ComputerVision)cv).getGoalsLocation();
+        goalPoint= new Point(600, 240);
         return calcDistance(((ComputerVision)cv).getRobotLocation(),goalPoint);
     }
 
     public double[] angleToGoal(){
-        Point goalLocation = ((ComputerVision)cv).getGoalsLocation();
-        goalLocation.x= goalLocation.x+25;
+        Point goalLocation = new Point(); //(ComputerVision)cv).getGoalsLocation();
+        goalLocation= new Point(600, 240);
         return calcAngle(((ComputerVision)cv).getRobotLocation(),goalLocation);
     }
 
