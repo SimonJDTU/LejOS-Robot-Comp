@@ -13,103 +13,88 @@ public class MovementManager {
     private boolean goToEdgeBall = true;
     private int ballCaught = 0;
     private final Point smallGoalDot = new Point(560, 240);
-    private final Point bigGoalDot = new Point(80, 240);
     private final Point smallGoal = new Point(639, 240);
-    private final Point bigGoal = new Point(1, 240);
-
 
     MovementManager() {
         this.client = new Client();
         this.client.startConnection(IP_C0NNECTION, PORT_CONNECTION);
     }
 
-    //TODO: set up waiting system, instead of taking images.
     void run() {
-
-        Point closetsBall;
-        ArrayList<Point> robotLocation;
-        for (int i = 0; i < 10; i++) {
-            cv.run();
-        }
+        Point closestBall;
+        processImages();
 
         do {
             if (ballCaught >= 3 ||(numberOfBalls()==0 && ballCaught>0)) {
                 System.out.println("Goal delivery hit");
-                for (int i = 0; i < 10; i++) {
-                    cv.run();
-                }
-                Point goal = closetsGoal();
-                turnDegrees(angleToGoal(goal));
-                moveDistance(distanceToGoal(goal), 0, 0);
 
-                for (int i = 0; i < 10; i++) {
-                    cv.run();
-                }
-                turnDegrees(turnToFaceGoal(goal));
-                depositballs();
+                processImages();
+                turnDegrees(angleToGoal(smallGoalDot));
+
+                processImages();
+                moveDistance(distanceToGoal(smallGoalDot), 0, 15);
+
+                processImages();
+                turnDegrees(angleToGoal(smallGoalDot));
+
+                processImages();
+                moveDistance(distanceToGoal(smallGoalDot), 0, 0);
+
+                processImages();
+                turnDegrees(turnToFaceGoal());
+
+                processImages();
+                depositBalls();
+
+                processImages();
                 ballCaught = 0;
             } else {
                 //TODO: Make it so it recalculates the angle and distance close to the ball
-                for (int i = 0; i < 10; i++) {
-                    cv.run();
-                }
-                closetsBall = getClosestBall();
-                cv.cleanPath(closetsBall);
-                robotLocation = cv.getRobotLocation();
-                if (cv.ballsCloseToEdge(closetsBall) == null) {
-                    turnDegrees(calcAngle(robotLocation, closetsBall));
-                    for (int i = 0; i < 10; i++) {
-                        cv.run();
-                    }
-                    if (calcDistance(robotLocation, closetsBall) >= 20) {
-                        moveDistance(calcDistance(robotLocation, closetsBall), 0, 15);
-                        for (int i = 0; i < 10; i++) {
-                            cv.run();
-                        }
+                processImages();
+                closestBall = getClosestBall();
+
+                //cross detection stuff
+                cv.cleanPath(closestBall);
+
+                if (isCornerBall(closestBall)) {
+                    processImages();
+                    turnDegrees(calcAngle(cv.getRobotLocation(), cv.ballsCloseToEdge(closestBall)));
+
+                    if (calcDistance(cv.getRobotLocation(), closestBall) >= 20) {
+                        processImages();
+                        moveDistance(calcDistance(cv.getRobotLocation(), cv.ballsCloseToEdge(closestBall)), 0, 0);
                     }
 
-                    for (int i = 0; i < 10; i++) {
-                        cv.run();
-                    }
-                    closetsBall = getClosestBall();
-                    robotLocation = ((ComputerVision) cv).getRobotLocation();
-                    turnDegrees(calcAngle(robotLocation, closetsBall));
-                    for (int i = 0; i < 10; i++) {
-                        cv.run();
-                    }
-                    moveDistance(calcDistance(robotLocation, closetsBall), 15, 0);
+                    processImages();
+                    //closestBall = getClosestBall();
+
+                    processImages();
+                    turnDegrees(calcAngle(cv.getRobotLocation(), closestBall));
+
+                    processImages();
+                    moveDistance(calcDistance(cv.getRobotLocation(), closestBall), 10, 0);
                     client.sendMessage("6-20");
                     waitForRobot();
 
                     ballCaught++;
                 } else {
-                    turnDegrees(calcAngle(robotLocation, closetsBall));
-                    for (int i = 0; i < 10; i++) {
-                        cv.run();
-                    }
-                    if (calcDistance(robotLocation, closetsBall) >= 20) {
-                        moveDistance(calcDistance(robotLocation, closetsBall), 0, 0);
-                        for (int i = 0; i < 10; i++) {
-                            cv.run();
-                        }
-                    }
-                    for (int i = 0; i < 10; i++) {
-                        cv.run();
-                    }
-                    closetsBall = getClosestBall();
-                    robotLocation = ((ComputerVision) cv).getRobotLocation();
-                    for (int i = 0; i < 10; i++) {
-                        cv.run();
-                    }
-                    turnDegrees(calcAngle(robotLocation, closetsBall));
-                    for (int i = 0; i < 10; i++) {
-                        cv.run();
-                    }
-                    moveDistance(calcDistance(robotLocation, closetsBall), 13, 0);
-                    for (int i = 0; i < 10; i++) {
-                        cv.run();
+                    processImages();
+                    turnDegrees(calcAngle(cv.getRobotLocation(), closestBall));
+                    if (calcDistance(cv.getRobotLocation(), closestBall) >= 20) {
+                        processImages();
+                        moveDistance(calcDistance(cv.getRobotLocation(), closestBall), 0, 0);
                     }
 
+                    processImages();
+                    closestBall = getClosestBall();
+
+                    processImages();
+                    turnDegrees(calcAngle(cv.getRobotLocation(), closestBall));
+
+                    processImages();
+                    moveDistance(calcDistance(cv.getRobotLocation(), closestBall), 13, 0);
+
+                    processImages();
                     ballCaught++;
                 }
             }
@@ -117,19 +102,9 @@ public class MovementManager {
         System.out.println("Program ended");
     }
 
-    private void depositballs() {
+    private void depositBalls() {
         client.sendMessage("4");
         waitForRobot();
-    }
-
-    private Point closetsGoal() {
-
-        double returnSmall = calcDistance(((ComputerVision) cv).getRobotLocation(), new Point(540, 240));
-        double returnBig = calcDistance(((ComputerVision) cv).getRobotLocation(), new Point(100, 240));
-        if (returnBig > returnSmall) {
-            return smallGoalDot;
-        }
-        return bigGoalDot;
     }
 
     private void waitForRobot() {
@@ -141,9 +116,15 @@ public class MovementManager {
         }
     }
 
+    private void processImages(){
+        for (int i = 0; i < 10; i++) {
+            cv.run();
+        }
+    }
+
     private void moveDistance(double distance, double noseOffset, double offset) {
         System.out.println("****************");
-        System.out.println("Driving Length: " + distance);
+        //System.out.println("Driving Length: " + distance);
         String command;
         command = "1-" + (int) ((distance / 3.844) - noseOffset - offset);
         client.sendMessage(command);
@@ -189,30 +170,31 @@ public class MovementManager {
     }
 
     private int numberOfBalls() {
-        return ((ComputerVision) cv).getBallsLocation().size();
+        return cv.getBallsLocation().size();
     }
 
     private Point getClosestBall() {
         //it is assumes that the back of the robot is the center.
-        ArrayList<Point> robotPoint = ((ComputerVision) cv).getRobotLocation();
+        ArrayList<Point> robotPoint = cv.getRobotLocation();
         Point returnPoint = new Point(340, 240);
         double minDist = 1000000;
-        for (Point ball : ((ComputerVision) cv).getBallsLocation()) {
+        for (Point ball : cv.getBallsLocation()) {
             double distance = Math.sqrt(Math.pow(ball.x - robotPoint.get(0).x, 2) + Math.pow(ball.y - robotPoint.get(0).y, 2));
             if (distance < minDist) {
                 minDist = distance;
                 returnPoint = ball;
             }
         }
-        Point edgeBall = ((ComputerVision) cv).ballsCloseToEdge(returnPoint);
-        if (edgeBall != null && goToEdgeBall) {
-            goToEdgeBall = false;
-            return edgeBall;
-        } else {
-            goToEdgeBall = true;
-            return returnPoint;
-        }
+        return returnPoint;
+    }
 
+    private boolean isCornerBall(Point goal){
+        Point tempPoint = cv.ballsCloseToEdge(goal);
+        System.out.println("temppoit nfor ball :" + tempPoint);
+        if(tempPoint==null){
+            return false;
+        }
+        return true;
     }
 
     private double calcDistance(ArrayList<Point> robotPoint, Point goal) {
@@ -227,11 +209,9 @@ public class MovementManager {
         return calcAngle(cv.getRobotLocation(), goal);
     }
 
-    public double[] turnToFaceGoal(Point goal) {
-        if(goal.equals(this.smallGoalDot)){
-            return calcAngle(cv.getRobotLocation(), this.smallGoal);
-        }
-        return calcAngle(cv.getRobotLocation(), this.bigGoal);
+    public double[] turnToFaceGoal() {
+        return calcAngle(cv.getRobotLocation(), this.smallGoal);
+
     }
 
 }

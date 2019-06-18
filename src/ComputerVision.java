@@ -1,6 +1,4 @@
 import nu.pattern.OpenCV;
-import org.bytedeco.javacpp.opencv_core;
-import org.bytedeco.javacpp.opencv_xfeatures2d;
 import org.opencv.calib3d.Calib3d;
 import org.opencv.core.*;
 import org.opencv.highgui.HighGui;
@@ -227,7 +225,7 @@ public class ComputerVision extends JPanel implements IComputerVision {
             } else {
                 System.out.println("No picture taken");
             }
-            System.out.println("ComputerVision ended");
+            //System.out.println("ComputerVision ended");
         }
 
     public void drawOnImages(Point point1, Point point2, Scalar color) {
@@ -405,30 +403,42 @@ public class ComputerVision extends JPanel implements IComputerVision {
     public Point ballsCloseToEdge(Point currentBall){
         Point closeToEdge = new Point();
         int safetyDistance = 100;
+        //top left corner
         if(currentBall.x < 100 && currentBall.y < 100){
             closeToEdge.x = currentBall.x+safetyDistance;
             closeToEdge.y = currentBall.y+safetyDistance;
+            return closeToEdge;
+            //top right corner
         } else if(currentBall.x > 560 && currentBall.y < 100){
             closeToEdge.x = currentBall.x-safetyDistance;
             closeToEdge.y = currentBall.y+safetyDistance;
-        } else if(currentBall.x > 560 && closeToEdge.y > 380){
+            return closeToEdge;
+            //bottom right corner
+        } else if(currentBall.x > 560 && currentBall.y > 380){
             closeToEdge.x = currentBall.x-safetyDistance;
             closeToEdge.y = currentBall.y-safetyDistance;
+            return closeToEdge;
+            //bottom left corner
         }else if (currentBall.x < 100 && currentBall.y > 380){
             closeToEdge.x = currentBall.x+safetyDistance;
             closeToEdge.y = currentBall.y-safetyDistance;
+            return closeToEdge;
+            //bottom
         } else if(currentBall.y > 440){
             closeToEdge.x = currentBall.x;
             closeToEdge.y = currentBall.y-safetyDistance;
             return closeToEdge;
+            //top
         }else if(currentBall.y < 40){
             closeToEdge.x = currentBall.x;
             closeToEdge.y = currentBall.y+safetyDistance;
             return closeToEdge;
+            //left
         }else if(currentBall.x < 40){
             closeToEdge.x = currentBall.x+safetyDistance;
             closeToEdge.y = currentBall.y;
             return  closeToEdge;
+
         }else if(currentBall.x > 600){
             closeToEdge.x = currentBall.x-safetyDistance;
             closeToEdge.y = currentBall.y;
