@@ -13,6 +13,7 @@ public class MovementManager {
    private  ComputerVision cv = new ComputerVision();
     private boolean goToEdgeBall = true;
     private  int ballCaught = 0;
+    private  boolean finalGo = false;
     MovementManager()
     {
         this.client = new Client();
@@ -143,10 +144,12 @@ public class MovementManager {
             }
         }
         Point edgeBall = ((ComputerVision) cv).ballsCloseToEdge(returnPoint);
-        if(edgeBall != null && goToEdgeBall){
+        if(edgeBall != null && goToEdgeBall && !finalGo){
             goToEdgeBall = false;
+            finalGo = true;
             return edgeBall;
         }else{
+            finalGo = false;
             goToEdgeBall = true;
             ballCaught++;
             return returnPoint;
