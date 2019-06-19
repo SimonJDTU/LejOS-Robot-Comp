@@ -148,7 +148,9 @@ public class ComputerVision extends JPanel implements IComputerVision {
                 Imgproc.cvtColor(frame, tempImage5, COLOR_BGR2HSV);
 
                 //Core.inRange(tempImage2,new Scalar(0,0,0),new Scalar(250,250,180),tempImage2);
-                //Detect borders ???
+
+                //Detect cross ???
+
                 Imgproc.cvtColor(frame, tempImage1, COLOR_BGR2HSV);
                 inRange(tempImage1, new Scalar(0, 220, 220), new Scalar(20, 255, 255), tempImage1);
                 HighGui.imshow("hallo", tempImage1);
