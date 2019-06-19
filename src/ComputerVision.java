@@ -24,6 +24,9 @@ public class ComputerVision extends JPanel implements IComputerVision {
     private Mat frame;
     private VideoCapture camera;
     private Point centerPointCross = new Point();
+    private Point crossRotationPoint = new Point();
+    private Point ballPoint = new Point();
+
 
     private final int SET_FRAME_WIDTH = 640, SET_FRAME_HEIGHT = 480;
 
@@ -184,6 +187,8 @@ public class ComputerVision extends JPanel implements IComputerVision {
 
 
 
+
+
                 //inRange(tempImage8, new Scalar(25, 80, 245), new Scalar(40, 100, 255), combined);
 
                 //Colorize circles
@@ -247,6 +252,31 @@ public class ComputerVision extends JPanel implements IComputerVision {
         HighGui.waitKey(1);
     }
 
+    /*public Point circleRotation(Point centerPointCross)
+    {
+        double x0 , x1 , y0 , y1;
+        x0=centerPointCross.x;
+        y0=centerPointCross.y;
+        x1=;
+        crossRotationPoint = ;
+        return crossRotationPoint;
+    }*/
+
+    public boolean insideCircle(Point goal)
+    {
+        double x0 , x1 , y0 , y1 , d;
+        x0=centerPointCross.x;
+        y0=centerPointCross.y;
+        x1=goal.x;
+        y1=goal.y;
+        d = Math.sqrt(Math.pow(x1-x0,2)+Math.pow(y1-y0,2));
+        System.out.println("d: "+ d);
+        if(d <= 70){
+            return true;
+        }
+        return false;
+    }
+
     public boolean cleanPath(Point goal){
 
             double a , b , t , c, S;
@@ -259,8 +289,8 @@ public class ComputerVision extends JPanel implements IComputerVision {
          y0=getRobotLocation().get(0).y;
 
         // Ball Vector
-        x1=goal.x;
-        y1=goal.y;
+            x1=goal.x;
+            y1=goal.y;
 
         //Circel center and radius
             h = centerPointCross.x;
