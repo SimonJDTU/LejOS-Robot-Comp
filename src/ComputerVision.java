@@ -8,6 +8,7 @@ import org.opencv.videoio.VideoCapture;
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Vector;
 
 import static org.opencv.core.Core.inRange;
 import static org.opencv.core.CvType.CV_8UC1;
@@ -25,7 +26,7 @@ public class ComputerVision extends JPanel implements IComputerVision {
     private VideoCapture camera;
     private Point centerPointCross = new Point();
     private Point crossRotationPoint = new Point();
-    private Point ballPoint = new Point();
+    private Point returnPoint = new Point();
 
 
     private final int SET_FRAME_WIDTH = 640, SET_FRAME_HEIGHT = 480;
@@ -181,8 +182,10 @@ public class ComputerVision extends JPanel implements IComputerVision {
                     crossMedianY.clear();
                     Imgproc.line(frame, centerPointCross, centerPointCross, new Scalar(255, 255, 255), 5);
                     circle(frame, centerPointCross, 70, new Scalar(255, 100, 100), 7, 8, 0);
-                }catch(IndexOutOfBoundsException e){
+                    circle(frame, returnPoint, 70, new Scalar(229, 43, 80), 7, 8, 0);
 
+                }catch(IndexOutOfBoundsException e){
+                    e.printStackTrace();
                 }
 
 
@@ -252,15 +255,17 @@ public class ComputerVision extends JPanel implements IComputerVision {
         HighGui.waitKey(1);
     }
 
-    /*public Point circleRotation(Point centerPointCross)
+    public Point circleRotation(Point goal)
     {
         double x0 , x1 , y0 , y1;
         x0=centerPointCross.x;
         y0=centerPointCross.y;
-        x1=;
-        crossRotationPoint = ;
-        return crossRotationPoint;
-    }*/
+        x1=goal.x;
+        y1=goal.y;
+        returnPoint = new Point((x1 - x0)*4,(y1-y0)*4);
+        return returnPoint;
+
+    }
 
     public boolean insideCircle(Point goal)
     {
