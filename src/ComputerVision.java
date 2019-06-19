@@ -25,9 +25,9 @@ public class ComputerVision extends JPanel implements IComputerVision {
     private Mat frame;
     private VideoCapture camera;
     private Point centerPointCross = new Point();
-    private Point crossRotationPoint = new Point();
     private Point returnPoint = new Point();
     private final boolean RUN_INFINITE = false;
+    private final int crossRadius = 90;
 
 
     private final int SET_FRAME_WIDTH = 640, SET_FRAME_HEIGHT = 480;
@@ -77,18 +77,15 @@ public class ComputerVision extends JPanel implements IComputerVision {
     public void run() {
         Mat tempImage = new Mat();
         Mat tempImage1 = new Mat();
-        Mat tempImage2 = new Mat();
-        Mat tempImage3 = new Mat();
-        Mat combined = new Mat();
+        Mat tempImage3;
         Mat tempImage5 = new Mat();
-        Mat matHomography;
         Mat cornerImage = new Mat();
         MatOfPoint2f cornersOfFrame, cornersOfTrack;
         Mat circles = new Mat();
         Mat frontCircles = new Mat();
         Mat backcircles = new Mat();
         ArrayList<Point> corners;
-        do{
+        do {
             if (camera.read(frame)) {
 
                 // Convert color for ball detection
@@ -100,19 +97,18 @@ public class ComputerVision extends JPanel implements IComputerVision {
                 Imgproc.cvtColor(frame, cornerImage, COLOR_BGR2RGB);
                 Imgproc.cvtColor(cornerImage, cornerImage, COLOR_RGB2GRAY);
                 tempImage3 = cornerImage;
-                HighGui.imshow("hmm",tempImage3);
+                HighGui.imshow("hmm", tempImage3);
                 Imgproc.medianBlur(cornerImage, cornerImage, 7);
 
                 inRange(cornerImage, new Scalar(0, 0, 0), new Scalar(70, 70, 70), cornerImage);
                 // New Mat to detect colors
                 Imgproc.cvtColor(frame, tempImage1, COLOR_BGR2HSV);
-                Mat tempImage8 = tempImage1.clone();
                 Core.normalize(tempImage, tempImage1, 10, 200, Core.NORM_MINMAX, CV_8UC1);
 
                 //Detect corners and do homography warp
                 try {
                     corners = detectCorners(cornerImage);
-                    if(corners.size() == 4){
+                    if (corners.size() == 4) {
                         goodCorners = corners;
                         cornersOfTrack = new MatOfPoint2f(corners.get(0), corners.get(1), corners.get(2), corners.get(3));
                         cornersOfFrame = new MatOfPoint2f(new Point(0, 0), new Point(640, 0), new Point(0, 480), new Point(640, 480));
@@ -192,7 +188,7 @@ public class ComputerVision extends JPanel implements IComputerVision {
                     crossMedianX.clear();
                     crossMedianY.clear();
                     Imgproc.line(frame, centerPointCross, centerPointCross, new Scalar(255, 255, 255), 5);
-                    circle(frame, centerPointCross, 70, new Scalar(255, 100, 100), 7, 8, 0);
+                    circle(frame, centerPointCross, crossRadius, new Scalar(255, 100, 100), 7, 8, 0);
 
                     //Cross goalDot
                     circle(frame, returnPoint, 1, new Scalar(80, 43, 229), 7, 8, 0);
@@ -215,7 +211,7 @@ public class ComputerVision extends JPanel implements IComputerVision {
                 }
 
                 ballConsistency.add(0, ballsLocation);
-                if (ballConsistency.size() >= 10) {
+                if (ballConsistency.size() >= 15) {
                     ballConsistency.remove(ballConsistency.size() - 1);
                 }
 
@@ -235,6 +231,7 @@ public class ComputerVision extends JPanel implements IComputerVision {
                         }
                     }
                 }
+                System.out.println(balls.size());
                 //System.out.println("amount of balls: " + balls.size());
                 for (Point ball : balls) {
                     circle(frame, ball, 1, new Scalar(255, 100, 100), 7, 8, 0);
@@ -246,18 +243,36 @@ public class ComputerVision extends JPanel implements IComputerVision {
                 System.out.println("No picture taken");
             }
             //System.out.println("ComputerVision ended");
-        }while (RUN_INFINITE);
+        } while (RUN_INFINITE);
     }
 
-    public void drawOnImages(Point point1, Point point2, Scalar color) {
+    private void drawOnImages(Point point1, Point point2, Scalar color) {
 
         Imgproc.line(frame, point1, point2, color, 5);
 
     }
 
-    private void showGUI(){
+    private void showGUI() {
+
+        //safety points
+        Imgproc.line(frame, new Point(95, 95), new Point(95, 95), new Scalar(0, 255, 0), 5);
+        Imgproc.line(frame, new Point(320, 95), new Point(320, 95), new Scalar(0, 255, 0), 5);
+        Imgproc.line(frame, new Point(545, 95), new Point(545, 95), new Scalar(0, 255, 0), 5);
+        Imgproc.line(frame, new Point(545, 240), new Point(545, 240), new Scalar(0, 255, 0), 5);
+        Imgproc.line(frame, new Point(545, 385), new Point(545, 385), new Scalar(0, 255, 0), 5);
+        Imgproc.line(frame, new Point(320, 385), new Point(320, 385), new Scalar(0, 255, 0), 5);
+        Imgproc.line(frame, new Point(95, 385), new Point(95, 385), new Scalar(0, 255, 0), 5);
+        Imgproc.line(frame, new Point(95, 240), new Point(95, 240), new Scalar(0, 255, 0), 5);
+
+        //drawing ballCloseToEdge
+        Imgproc.line(frame, new Point(50, 50), new Point(50, 430), new Scalar(0, 255, 0), 5);
+        Imgproc.line(frame, new Point(50, 430), new Point(590, 430), new Scalar(0, 255, 0), 5);
+        Imgproc.line(frame, new Point(590, 430), new Point(590, 50), new Scalar(0, 255, 0), 5);
+        Imgproc.line(frame, new Point(590, 50), new Point(50, 50), new Scalar(0, 255, 0), 5);
+
+        //goal
         Imgproc.line(frame, new Point(540, 240), new Point(540, 240), new Scalar(0, 0, 255), 5);
-        Imgproc.line(frame, new Point(100, 240), new Point(100, 240), new Scalar(255, 0, 0), 5);
+
         HighGui.imshow("SHIET SON", frame);
         //HighGui.imshow("whatever2", cornerImage);
         //hGui.imshow("whatever", tempImage);
@@ -266,99 +281,82 @@ public class ComputerVision extends JPanel implements IComputerVision {
         HighGui.waitKey(1);
     }
 
-    public Point circleRotation(Point goal)
-    {
-        double x0 , x1 , y0 , y1;
-        final int factor=6;
+    public Point circleRotation(Point goal) {
+        double x0, x1, y0, y1;
+        final int factor = 8;
 
-        x0=centerPointCross.x;
-        y0=centerPointCross.y;
+        x0 = centerPointCross.x;
+        y0 = centerPointCross.y;
 
-        x1=goal.x;
-        y1=goal.y;
+        x1 = goal.x;
+        y1 = goal.y;
 
-        returnPoint = new Point((x0-(x0 - x1)*factor),(y0-(y0-y1)*factor));
+        returnPoint = new Point((x0 - (x0 - x1) * factor), (y0 - (y0 - y1) * factor));
         double vectorLength = Math.sqrt(Math.pow(returnPoint.x - centerPointCross.x, 2) + Math.pow(returnPoint.y - centerPointCross.y, 2));
 
-        if(vectorLength>150){
-            Point vectorDisc = new Point(x1-x0,y1-y0);
-            double vectorDiscLength = Math.sqrt(Math.pow(vectorDisc.x,2)+Math.pow(vectorDisc.y,2));
-            double vectorFactor = 200/vectorDiscLength;
-            vectorDisc.x*=vectorFactor;
-            vectorDisc.y*=vectorFactor;
-            returnPoint = new Point(vectorDisc.x+=centerPointCross.x,vectorDisc.y+=centerPointCross.y);
+        if (vectorLength > 150) {
+            Point vectorDisc = new Point(x1 - x0, y1 - y0);
+            double vectorDiscLength = Math.sqrt(Math.pow(vectorDisc.x, 2) + Math.pow(vectorDisc.y, 2));
+            double vectorFactor = 150 / vectorDiscLength;
+            vectorDisc.x *= vectorFactor;
+            vectorDisc.y *= vectorFactor;
+            returnPoint = new Point(vectorDisc.x += centerPointCross.x, vectorDisc.y += centerPointCross.y);
             return returnPoint;
         }
         return returnPoint;
 
     }
 
-    public boolean insideCircle(Point goal)
-    {
-        double x0 , x1 , y0 , y1 , d;
-        x0=centerPointCross.x;
-        y0=centerPointCross.y;
-        x1=goal.x;
-        y1=goal.y;
-        d = Math.sqrt(Math.pow(x1-x0,2)+Math.pow(y1-y0,2));
-        System.out.println("d: "+ d);
-        if(d <= 70){
+    public boolean insideCircle(Point goal) {
+        double x0, x1, y0, y1, d;
+        x0 = centerPointCross.x;
+        y0 = centerPointCross.y;
+        x1 = goal.x;
+        y1 = goal.y;
+        d = Math.sqrt(Math.pow(x1 - x0, 2) + Math.pow(y1 - y0, 2));
+        System.out.println("d: " + d);
+        if (d <= crossRadius) {
             return true;
         }
         return false;
     }
 
-    public boolean cleanPath(Point goal){
+    public boolean cleanPath(Point startPoint, Point endPoint) {
 
-            double a , b , t , c, S;
-            double x0 , x1 , y0 , y1;
-            double k , h , r;
-            //double x , y, R;
+        double a, b, c, S;
+        double x0, x1, y0, y1;
+        double k, h, r;
 
         // Roberts vector
-         x0=getRobotLocation().get(0).x;
-         y0=getRobotLocation().get(0).y;
+        x0 = startPoint.x;
+        y0 = startPoint.y;
 
         // Ball Vector
-            x1=goal.x;
-            y1=goal.y;
+        x1 = endPoint.x;
+        y1 = endPoint.y;
 
         //Circel center and radius
-            h = centerPointCross.x;
-            k = centerPointCross.y;
-            r = 70;
+        h = centerPointCross.x;
+        k = centerPointCross.y;
+        r = crossRadius;
 
+        a = Math.pow(x1 - x0, 2) + Math.pow(y1 - y0, 2);
 
-            //R = Math.sqrt(Math.pow(x-h,2)+ Math.pow(y-k,2));
+        b = 2 * (x1 - x0) * (x0 - h) + 2 * (y1 - y0) * (y0 - k);
 
-            a = Math.pow(x1-x0,2) + Math.pow(y1-y0,2);
+        c = Math.pow(x0 - h, 2) + Math.pow(y0 - k, 2) - Math.pow(r, 2);
 
-            b = 2*(x1-x0)*(x0-h)+2*(y1-y0)*(y0-k);
+        S = Math.pow(b, 2) - 4 * a * c;
 
-            c = Math.pow(x0-h,2)+Math.pow(y0-k,2)-Math.pow(r,2);
-
-            S = Math.pow(b, 2)-4*a*c;
-
-            if(S < 0)
-            {
-                System.out.println("--------------------");
-                System.out.println("--Free togo Robert--");
-                System.out.println("--------------------");
-                return true;
-            }
-                System.out.println("--------------------");
-                System.out.println("--Dont You fucking--");
-                System.out.println("----Drive Robert----");
-                System.out.println("--------------------");
-                return false;
-
-
-            //Circels possition
-
+        if (S < 0) {
+            System.out.println("CLEANPATH: x=" + endPoint.x + " y=" + endPoint.y +" : TRUE");
+            return true;
+        }
+        System.out.println("CLEANPATH: x=" + endPoint.x + " y=" + endPoint.y +" : FALSE");
+        return false;
     }
 
     private ArrayList<Point> detectCorners(Mat cornerImage) throws IndexOutOfBoundsException {
-
         ArrayList<Double> medianX = new ArrayList<>();
         ArrayList<Double> medianY = new ArrayList<>();
         Point upperLeftCorner = new Point();
@@ -438,12 +436,12 @@ public class ComputerVision extends JPanel implements IComputerVision {
         lowerRightCorner.y = medianY.get(medianY.size() / 2);
         corners.add(lowerRightCorner);
 
-        Scalar color = new Scalar(0,0,250);
+        Scalar color = new Scalar(0, 0, 250);
 
-        drawOnImages(upperLeftCorner,upperRightCorner,color);
-        drawOnImages(upperRightCorner,lowerRightCorner,color);
-        drawOnImages(lowerRightCorner,lowerLeftCorner,color);
-        drawOnImages(lowerLeftCorner,upperLeftCorner,color);
+        drawOnImages(upperLeftCorner, upperRightCorner, color);
+        drawOnImages(upperRightCorner, lowerRightCorner, color);
+        drawOnImages(lowerRightCorner, lowerLeftCorner, color);
+        drawOnImages(lowerLeftCorner, upperLeftCorner, color);
 
         return corners;
 
@@ -460,52 +458,55 @@ public class ComputerVision extends JPanel implements IComputerVision {
         return robotLocation;
     }
 
-    public void setProgramRunning(Boolean bool){
-    }
 
-    public Point ballsCloseToEdge(Point currentBall){
+    public Point ballsCloseToEdge(Point currentBall) {
         Point closeToEdge = new Point();
         int safetyDistance = 100;
+        int detectionDistance = 50;
+        int ySmallFromEdge = detectionDistance;
+        int xBigFromEdge = 640-detectionDistance;
+        int yBigFromEdge = 480-detectionDistance;
+
         //top left corner
-        if(currentBall.x < 100 && currentBall.y < 100){
-            closeToEdge.x = currentBall.x+safetyDistance;
-            closeToEdge.y = currentBall.y+safetyDistance;
+        if (currentBall.x < detectionDistance && currentBall.y < ySmallFromEdge) {
+            closeToEdge.x = currentBall.x + safetyDistance;
+            closeToEdge.y = currentBall.y + safetyDistance;
             return closeToEdge;
             //top right corner
-        } else if(currentBall.x > 560 && currentBall.y < 100){
-            closeToEdge.x = currentBall.x-safetyDistance;
-            closeToEdge.y = currentBall.y+safetyDistance;
+        } else if (currentBall.x > xBigFromEdge && currentBall.y < ySmallFromEdge) {
+            closeToEdge.x = currentBall.x - safetyDistance;
+            closeToEdge.y = currentBall.y + safetyDistance;
             return closeToEdge;
             //bottom right corner
-        } else if(currentBall.x > 560 && currentBall.y > 380){
-            closeToEdge.x = currentBall.x-safetyDistance;
-            closeToEdge.y = currentBall.y-safetyDistance;
+        } else if (currentBall.x > xBigFromEdge && currentBall.y > yBigFromEdge) {
+            closeToEdge.x = currentBall.x - safetyDistance;
+            closeToEdge.y = currentBall.y - safetyDistance;
             return closeToEdge;
             //bottom left corner
-        }else if (currentBall.x < 100 && currentBall.y > 380){
-            closeToEdge.x = currentBall.x+safetyDistance;
-            closeToEdge.y = currentBall.y-safetyDistance;
+        } else if (currentBall.x < detectionDistance && currentBall.y > yBigFromEdge) {
+            closeToEdge.x = currentBall.x + safetyDistance;
+            closeToEdge.y = currentBall.y - safetyDistance;
             return closeToEdge;
             //bottom
-        } else if(currentBall.y > 380){
+        } else if (currentBall.y > yBigFromEdge) {
             closeToEdge.x = currentBall.x;
-            closeToEdge.y = currentBall.y-safetyDistance;
+            closeToEdge.y = currentBall.y - safetyDistance;
             return closeToEdge;
             //top
-        }else if(currentBall.y < 100){
+        } else if (currentBall.y < ySmallFromEdge) {
             closeToEdge.x = currentBall.x;
-            closeToEdge.y = currentBall.y+safetyDistance;
+            closeToEdge.y = currentBall.y + safetyDistance;
             return closeToEdge;
             //left
-        }else if(currentBall.x < 100){
-            closeToEdge.x = currentBall.x+safetyDistance;
+        } else if (currentBall.x < detectionDistance) {
+            closeToEdge.x = currentBall.x + safetyDistance;
             closeToEdge.y = currentBall.y;
-            return  closeToEdge;
+            return closeToEdge;
 
-        }else if(currentBall.x > 500){
-            closeToEdge.x = currentBall.x-safetyDistance;
+        } else if (currentBall.x > xBigFromEdge) {
+            closeToEdge.x = currentBall.x - safetyDistance;
             closeToEdge.y = currentBall.y;
-            return  closeToEdge;
+            return closeToEdge;
         }
         return null;
     }

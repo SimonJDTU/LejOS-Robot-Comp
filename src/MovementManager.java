@@ -12,12 +12,56 @@ class MovementManager {
     private final Point smallGoalDot = new Point(560, 240);
     private final Point smallGoal = new Point(639, 240);
 
+    private ArrayList<SafetyCorner> securePoints = new ArrayList<>();
+
     private int PORT_CONNECTION = 5000;
     private String IP_C0NNECTION = "192.168.137.239";
 
     MovementManager() {
         this.client = new Client();
         this.client.startConnection(IP_C0NNECTION, PORT_CONNECTION);
+        SafetyCorner upperLeftSafetyCorner = new SafetyCorner(new Point(95, 95));
+        SafetyCorner topMidSafetyCorner = new SafetyCorner(new Point(320, 95));
+        SafetyCorner upperRightSafetyCorner = new SafetyCorner(new Point(545, 95));
+        SafetyCorner rightMidSafetyCorner = new SafetyCorner(new Point(545, 240));
+        SafetyCorner lowerRightSafetyCorner = new SafetyCorner(new Point(545, 385));
+        SafetyCorner botMidSafetyCorner = new SafetyCorner(new Point(320, 385));
+        SafetyCorner lowerLeftSafetyCorner = new SafetyCorner(new Point(95, 385));
+        SafetyCorner leftMidSafetyCorner = new SafetyCorner(new Point(95, 240));
+
+        upperLeftSafetyCorner.setLeft(topMidSafetyCorner);
+        upperLeftSafetyCorner.setRight(leftMidSafetyCorner);
+
+        topMidSafetyCorner.setLeft(upperRightSafetyCorner);
+        topMidSafetyCorner.setRight(upperLeftSafetyCorner);
+
+        upperRightSafetyCorner.setLeft(rightMidSafetyCorner);
+        upperRightSafetyCorner.setRight(topMidSafetyCorner);
+
+        rightMidSafetyCorner.setLeft(lowerRightSafetyCorner);
+        rightMidSafetyCorner.setRight(upperRightSafetyCorner);
+
+        lowerRightSafetyCorner.setLeft(botMidSafetyCorner);
+        lowerRightSafetyCorner.setRight(rightMidSafetyCorner);
+
+        botMidSafetyCorner.setLeft(lowerLeftSafetyCorner);
+        botMidSafetyCorner.setRight(lowerRightSafetyCorner);
+
+        lowerLeftSafetyCorner.setLeft(leftMidSafetyCorner);
+        lowerLeftSafetyCorner.setRight(botMidSafetyCorner);
+
+        leftMidSafetyCorner.setLeft(upperLeftSafetyCorner);
+        leftMidSafetyCorner.setRight(lowerLeftSafetyCorner);
+
+        securePoints.add(upperLeftSafetyCorner);
+        securePoints.add(topMidSafetyCorner);
+        securePoints.add(upperRightSafetyCorner);
+        securePoints.add(rightMidSafetyCorner);
+        securePoints.add(lowerLeftSafetyCorner);
+        securePoints.add(botMidSafetyCorner);
+        securePoints.add(lowerRightSafetyCorner);
+        securePoints.add(leftMidSafetyCorner);
+
     }
 
     void run() {
@@ -26,8 +70,18 @@ class MovementManager {
         int pointOffset, noseOffset;
 
         do {
-            if (ballCaught >= 3 || (numberOfBalls() == 0 && ballCaught > 0)) {
+            if (ballCaught >= 4 || (numberOfBalls() == 0 && ballCaught > 0)) {
                 System.out.println("Goal delivery hit");
+
+                //while path is not clean
+                if (!cv.cleanPath(cv.getRobotLocation().get(0), smallGoalDot)) {
+                    SafetyCorner securePoint = closestGoodPoint();
+                    turnDegrees(calcAngle(cv.getRobotLocation(), securePoint.location));
+                    processImages();
+                    moveDistance(calcDistance(cv.getRobotLocation(), securePoint.location), 0, 0);
+                    processImages();
+                    driveRoute(securePoint, smallGoalDot);
+                }
 
                 processImages();
                 turnDegrees(angleToSmallGoal(smallGoalDot));
@@ -58,35 +112,39 @@ class MovementManager {
                 closestBall = getClosestBall();
                 if (cv.insideCircle(closestBall)) {
                     goalPoint = cv.circleRotation(closestBall);
-                    pointOffset=0;
-                    noseOffset=20;
+                    pointOffset = 0;
+                    noseOffset = 15;
                 } else if (isCornerBall(closestBall)) {
                     goalPoint = cv.ballsCloseToEdge(closestBall);
-                    pointOffset=0;
-                    noseOffset=9;
+                    pointOffset = 0;
+                    noseOffset = 13;
                 } else {
                     goalPoint = closestBall;
-                    pointOffset=15;
-                    noseOffset=0;
+                    pointOffset = 10;
+                    noseOffset = 0;
                 }
 
                 //while path is not clean
-                while (!cv.cleanPath(closestBall)) {
-                    //move to hardcoded safe spots
-                    break;
+                if (!cv.cleanPath(cv.getRobotLocation().get(0), goalPoint)) {
+                    SafetyCorner securePoint = closestGoodPoint();
+                    turnDegrees(calcAngle(cv.getRobotLocation(), securePoint.location));
+                    moveDistance(calcDistance(cv.getRobotLocation(), securePoint.location), 0, 0);
+                    processImages();
+                    driveRoute(securePoint, goalPoint);
                 }
+
                 processImages();
                 turnDegrees(calcAngle(cv.getRobotLocation(), goalPoint));
 
-                if (calcDistance(cv.getRobotLocation(), goalPoint) >= 10) {
-                    processImages();
+                processImages();
+                if (calcDistance(cv.getRobotLocation(), goalPoint) >= 20) {
                     turnDegrees(calcAngle(cv.getRobotLocation(), goalPoint));
                     processImages();
                     moveDistance(calcDistance(cv.getRobotLocation(), goalPoint), 0, pointOffset);
                 }
 
-                if (calcDistance(cv.getRobotLocation(), goalPoint) >= 10) {
-                    processImages();
+                processImages();
+                if (calcDistance(cv.getRobotLocation(), goalPoint) >= 20) {
                     turnDegrees(calcAngle(cv.getRobotLocation(), goalPoint));
                     processImages();
                     moveDistance(calcDistance(cv.getRobotLocation(), goalPoint), 0, pointOffset);
@@ -95,24 +153,84 @@ class MovementManager {
                 processImages();
                 turnDegrees(calcAngle(cv.getRobotLocation(), closestBall));
 
+                //last nut
                 processImages();
                 moveDistance(calcDistance(cv.getRobotLocation(), closestBall), noseOffset, 0);
-                try{
+                try {
                     Thread.sleep(1000);
-                }catch (InterruptedException e){
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
                 moveBackwards();
                 ballCaught++;
                 processImages();
             }
-    } while(!(numberOfBalls() ==0&&ballCaught==0));
+        } while (!(numberOfBalls() == 0 && ballCaught == 0));
         client.sendMessage(".");
         System.out.println("Program ended");
-}
+    }
+
+    private void driveRoute(SafetyCorner closestGoodPoint, Point goal) {
+
+        SafetyCorner rightPointResult = closestGoodPoint.right;
+        SafetyCorner leftPointResult = closestGoodPoint.left;
+        int i=0,j=0;
+        while(i++<7){
+           if(cv.cleanPath(rightPointResult.location,goal)){
+               break;
+           }
+           rightPointResult=rightPointResult.right;
+        }
+
+        while(j++<7){
+            if(cv.cleanPath(leftPointResult.location,goal)){
+                break;
+            }
+            leftPointResult=leftPointResult.left;
+        }
+
+        SafetyCorner nextPoint = closestGoodPoint;
+        if(!(cv.cleanPath(nextPoint.location,closestGoodPoint.location))){
+            if (i < j) {
+                for (int k = 0; k < i; k++) {
+                    System.out.println("Driving right: " + i);
+                    nextPoint = nextPoint.right;
+                    processImages();
+                    turnDegrees(calcAngle(cv.getRobotLocation(), nextPoint.location));
+                    processImages();
+                    moveDistance(calcDistance(cv.getRobotLocation(), nextPoint.location), 0, 0);
+                }
+            } else {
+                for (int k = 0; k < j; k++) {
+                    System.out.println("Driving left: " + j);
+                    nextPoint = nextPoint.left;
+                    processImages();
+                    turnDegrees(calcAngle(cv.getRobotLocation(), nextPoint.location));
+                    processImages();
+                    moveDistance(calcDistance(cv.getRobotLocation(), nextPoint.location), 0, 0);
+                }
+            }
+        }
+    }
+
+    private SafetyCorner closestGoodPoint() {
+        SafetyCorner returnPoint = null;
+        ArrayList<Point> robot = cv.getRobotLocation();
+        double dist = 100000;
+
+        for (SafetyCorner point : securePoints) {
+            if (cv.cleanPath(robot.get(0), point.location)) {
+                if (calcDistance(robot, point.location) < dist) {
+                    returnPoint = point;
+                    dist = calcDistance(robot, point.location);
+                }
+            }
+        }
+        return returnPoint;
+    }
 
     private void moveBackwards() {
-        client.sendMessage("6-20");
+        client.sendMessage("6-16");
         waitForRobot();
     }
 
@@ -131,7 +249,7 @@ class MovementManager {
     }
 
     private void processImages() {
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 15; i++) {
             cv.run();
         }
     }
@@ -222,6 +340,25 @@ class MovementManager {
 
     private double[] turnToFaceSmallGoal() {
         return calcAngle(cv.getRobotLocation(), this.smallGoal);
+
+    }
+
+    private class SafetyCorner {
+        Point location;
+        SafetyCorner left = null;
+        SafetyCorner right = null;
+
+        private SafetyCorner(Point location) {
+            this.location = location;
+        }
+
+        private void setLeft(SafetyCorner left) {
+            this.left = left;
+        }
+
+        private void setRight(SafetyCorner right) {
+            this.right = right;
+        }
 
     }
 
