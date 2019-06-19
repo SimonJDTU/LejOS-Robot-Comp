@@ -23,7 +23,7 @@ public class ComputerVision extends JPanel implements IComputerVision {
     private static ArrayList<ArrayList<Point>> ballConsistency = new ArrayList<>();
     private Mat frame;
     private VideoCapture camera;
-    private Point centerPointCross = null;
+    private Point centerPointCross = new Point();
 
     private final int SET_FRAME_WIDTH = 640, SET_FRAME_HEIGHT = 480;
 
@@ -47,7 +47,7 @@ public class ComputerVision extends JPanel implements IComputerVision {
         // Capturing from usb Camera
         // Camera has to be 142-143 from the ground.
         // USB CAM index 4 , own is 0
-        camera = new VideoCapture(4);
+        camera = new VideoCapture(0);
         //camera.open("/dev/v41/by-id/usb-046d_Logitech_Webcam_C930e_DDCF656E-video-index0");
 
         // Set resolution
@@ -83,7 +83,7 @@ public class ComputerVision extends JPanel implements IComputerVision {
         Mat frontCircles = new Mat();
         Mat backcircles = new Mat();
         ArrayList<Point> corners;
-        while (true) {
+
             if (camera.read(frame)) {
 
                 // Convert color for ball detection
@@ -227,9 +227,9 @@ public class ComputerVision extends JPanel implements IComputerVision {
             } else {
                 System.out.println("No picture taken");
             }
-            System.out.println("ComputerVision ended");
+            //System.out.println("ComputerVision ended");
         }
-    }
+
     public void drawOnImages(Point point1, Point point2, Scalar color) {
 
         Imgproc.line(frame, point1, point2, color, 5);
@@ -238,6 +238,7 @@ public class ComputerVision extends JPanel implements IComputerVision {
 
     private void showGUI(Mat cornerImage){
         Imgproc.line(frame, new Point(540, 240), new Point(540, 240), new Scalar(0, 0, 255), 5);
+        Imgproc.line(frame, new Point(100, 240), new Point(100, 240), new Scalar(255, 0, 0), 5);
         HighGui.imshow("SHIET SON", frame);
         //HighGui.imshow("whatever2", cornerImage);
         //hGui.imshow("whatever", tempImage);
@@ -398,50 +399,51 @@ public class ComputerVision extends JPanel implements IComputerVision {
         return robotLocation;
     }
 
-    //TODO: return both goal locations
-    public Point getGoalsLocation() {
-        return goal2;
-    }
-
     public void setProgramRunning(Boolean bool){
     }
 
     public Point ballsCloseToEdge(Point currentBall){
         Point closeToEdge = new Point();
         int safetyDistance = 100;
-
-        /*
+        //top left corner
         if(currentBall.x < 100 && currentBall.y < 100){
-            closeToEdge.x = 100;
-            closeToEdge.y = 100;
+            closeToEdge.x = currentBall.x+safetyDistance;
+            closeToEdge.y = currentBall.y+safetyDistance;
+            return closeToEdge;
+            //top right corner
         } else if(currentBall.x > 560 && currentBall.y < 100){
-            closeToEdge.x = 560;
-            closeToEdge.y = 100;
-        } else if(currentBall.x > 560 && closeToEdge.y > 380){
-            closeToEdge.x = 560;
-            closeToEdge.y = 380;
+            closeToEdge.x = currentBall.x-safetyDistance;
+            closeToEdge.y = currentBall.y+safetyDistance;
+            return closeToEdge;
+            //bottom right corner
+        } else if(currentBall.x > 560 && currentBall.y > 380){
+            closeToEdge.x = currentBall.x-safetyDistance;
+            closeToEdge.y = currentBall.y-safetyDistance;
+            return closeToEdge;
+            //bottom left corner
         }else if (currentBall.x < 100 && currentBall.y > 380){
-            closeToEdge.x = 100;
-            closeToEdge.y = 380;
-        }
-
-       */
-
-        if(currentBall.y > 380){
+            closeToEdge.x = currentBall.x+safetyDistance;
+            closeToEdge.y = currentBall.y-safetyDistance;
+            return closeToEdge;
+            //bottom
+        } else if(currentBall.y > 380){
             closeToEdge.x = currentBall.x;
             closeToEdge.y = currentBall.y-safetyDistance;
             return closeToEdge;
+            //top
         }else if(currentBall.y < 100){
             closeToEdge.x = currentBall.x;
             closeToEdge.y = currentBall.y+safetyDistance;
             return closeToEdge;
+            //left
         }else if(currentBall.x < 100){
-            closeToEdge.x = currentBall.x;
-            closeToEdge.y = currentBall.y+safetyDistance;
+            closeToEdge.x = currentBall.x+safetyDistance;
+            closeToEdge.y = currentBall.y;
             return  closeToEdge;
-        }else if(currentBall.x > 540){
-            closeToEdge.x = currentBall.x;
-            closeToEdge.y = currentBall.y-safetyDistance;
+
+        }else if(currentBall.x > 500){
+            closeToEdge.x = currentBall.x-safetyDistance;
+            closeToEdge.y = currentBall.y;
             return  closeToEdge;
         }
         return null;
