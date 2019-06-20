@@ -52,7 +52,7 @@ public class Robot
         Motor.B.setSpeed(speed);
         int rotation = (int) (distance * 35.34);
         Motor.A.rotate(rotation, true);
-        Motor.B.rotate(rotation, true);
+        Motor.B.rotate(rotation, false);
     }
 
     public void MoveDistanceBackwardsAB(int distance)
@@ -78,6 +78,28 @@ public class Robot
         //System.out.println("Angle is " + angle);
         Motor.A.rotate(-angle, true);
         Motor.B.rotate(angle, false);
+    }
+
+    public void TurnClockwiseAB(int degrees, int speed)
+    {
+
+        Motor.A.setSpeed(speed);
+        Motor.B.setSpeed(speed);
+        int  angle = (int) (degrees * 5.05);
+        //System.out.println("Angle is " + angle);
+        Motor.A.rotate(-angle, true);
+        Motor.B.rotate(angle, false);
+    }
+
+    public void TurnCounterclockwiseAB(int degrees, int speed)
+    {
+        Motor.A.setSpeed(speed);
+        Motor.B.setSpeed(speed);
+        System.out.println("Turned " + degrees + " degrees");
+        int  angle = (int) (degrees * 5.077);
+        //System.out.println("Angle is " + angle);
+        Motor.B.rotate(-angle, true);
+        Motor.A.rotate(angle, false);
     }
 
     /**
