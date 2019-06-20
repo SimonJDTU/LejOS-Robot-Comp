@@ -19,23 +19,22 @@ import static org.opencv.videoio.Videoio.CV_CAP_PROP_FRAME_WIDTH;
 
 public class ComputerVision extends JPanel implements IComputerVision {
 
+    private final boolean RUN_INFINITE = false;
+    private final Point topLeft = new Point(73,43);
+    private final Point topRight = new Point(593,39);
+    private final Point botLeft = new Point(71,427);
+    private final Point botRight = new Point(599,427);
+
     private Point frontCenter = new Point(), backCenter = new Point(), lastPositionFront = new Point(), lastPositionBack = new Point(), goal2 = new Point();
     private ArrayList<Point> ballsLocation = new ArrayList<>();
     private ArrayList<Point> balls = new ArrayList<>();
     private static ArrayList<Point> goodCorners = new ArrayList<>();
-    private final Point topLeft = new Point(54,45);
-    private final Point topRight = new Point(581,34);
-    private final Point botLeft = new Point(58,428);
-    private final Point botRight = new Point(593,432);
-
     private static ArrayList<ArrayList<Point>> ballConsistency = new ArrayList<>();
     private Mat frame;
     private VideoCapture camera;
     private Point centerPointCross = new Point();
     private Point returnPoint = new Point();
-    private final boolean RUN_INFINITE = false;
     private final int crossRadius = 90;
-
 
     private final int SET_FRAME_WIDTH = 640, SET_FRAME_HEIGHT = 480;
 
@@ -79,7 +78,6 @@ public class ComputerVision extends JPanel implements IComputerVision {
 
         System.out.println("Initialization completed");
     }
-
 
     @Override
     public void run() {
@@ -180,18 +178,17 @@ public class ComputerVision extends JPanel implements IComputerVision {
                 //Core.inRange(tempImage2,new Scalar(0,0,0),new Scalar(250,250,180),tempImage2);
 
                 //Detect cross ???
-
                 Imgproc.cvtColor(frame, tempImage1, COLOR_BGR2HSV);
                 inRange(tempImage1, new Scalar(0, 220, 220), new Scalar(20, 255, 255), tempImage1);
-                HighGui.imshow("hallo", tempImage1);
+                HighGui.imshow("HSV", tempImage1);
 
 
                 ArrayList<Double> crossMedianX = new ArrayList<>();
                 ArrayList<Double> crossMedianY = new ArrayList<>();
 
                 try {
-                    for (int i = 100; i < tempImage1.cols() - 100; i++) {
-                        for (int j = 100; j < tempImage1.rows() - 100; j++) {
+                    for (int i = 25; i < tempImage1.cols() - 25; i++) {
+                        for (int j = 25; j < tempImage1.rows() - 25; j++) {
                             if (tempImage1.get(j, i)[0] == 255) {
                                 centerPointCross = new Point(i, j);
                                 crossMedianX.add(centerPointCross.x);
@@ -207,10 +204,10 @@ public class ComputerVision extends JPanel implements IComputerVision {
                     crossMedianX.clear();
                     crossMedianY.clear();
                     Imgproc.line(frame, centerPointCross, centerPointCross, new Scalar(255, 255, 255), 5);
-                    circle(frame, centerPointCross, crossRadius, new Scalar(255, 100, 100), 7, 8, 0);
+                    Imgproc.circle(frame, centerPointCross, crossRadius, new Scalar(255, 100, 100), 7, 8, 0);
 
                     //Cross goalDot
-                    circle(frame, returnPoint, 1, new Scalar(80, 43, 229), 7, 8, 0);
+                    Imgproc.circle(frame, returnPoint, 1, new Scalar(80, 43, 229), 7, 8, 0);
 
                 } catch (IndexOutOfBoundsException e) {
                     e.printStackTrace();
@@ -230,7 +227,7 @@ public class ComputerVision extends JPanel implements IComputerVision {
                 }
 
                 ballConsistency.add(0, ballsLocation);
-                if (ballConsistency.size() >= 15) {
+                if (ballConsistency.size() >= 5) {
                     ballConsistency.remove(ballConsistency.size() - 1);
                 }
 
@@ -307,45 +304,6 @@ public class ComputerVision extends JPanel implements IComputerVision {
         //HighGui.imshow("whatever3", tempImage3);
         //HighGui.imshow("whatever5",tempImage5);
         HighGui.waitKey(1);
-    }
-
-    public Point circleRotation(Point goal) {
-        double x0, x1, y0, y1;
-        final int factor = 8;
-
-        x0 = centerPointCross.x;
-        y0 = centerPointCross.y;
-
-        x1 = goal.x;
-        y1 = goal.y;
-
-        returnPoint = new Point((x0 - (x0 - x1) * factor), (y0 - (y0 - y1) * factor));
-        double vectorLength = Math.sqrt(Math.pow(returnPoint.x - centerPointCross.x, 2) + Math.pow(returnPoint.y - centerPointCross.y, 2));
-
-        if (vectorLength > 150) {
-            Point vectorDisc = new Point(x1 - x0, y1 - y0);
-            double vectorDiscLength = Math.sqrt(Math.pow(vectorDisc.x, 2) + Math.pow(vectorDisc.y, 2));
-            double vectorFactor = 150 / vectorDiscLength;
-            vectorDisc.x *= vectorFactor;
-            vectorDisc.y *= vectorFactor;
-            returnPoint = new Point(vectorDisc.x += centerPointCross.x, vectorDisc.y += centerPointCross.y);
-            return returnPoint;
-        }
-        return returnPoint;
-
-    }
-
-    public boolean insideCircle(Point goal) {
-        double x0, x1, y0, y1, d;
-        x0 = centerPointCross.x;
-        y0 = centerPointCross.y;
-        x1 = goal.x;
-        y1 = goal.y;
-        d = Math.sqrt(Math.pow(x1 - x0, 2) + Math.pow(y1 - y0, 2));
-        if (d <= crossRadius) {
-            return true;
-        }
-        return false;
     }
 
     public boolean cleanPath(Point startPoint, Point endPoint) {
@@ -474,6 +432,45 @@ public class ComputerVision extends JPanel implements IComputerVision {
 
     }
 
+    public Point circleRotation(Point goal) {
+        double x0, x1, y0, y1;
+        final int factor = 8;
+
+        x0 = centerPointCross.x;
+        y0 = centerPointCross.y;
+
+        x1 = goal.x;
+        y1 = goal.y;
+
+        returnPoint = new Point((x0 - (x0 - x1) * factor), (y0 - (y0 - y1) * factor));
+        double vectorLength = Math.sqrt(Math.pow(returnPoint.x - centerPointCross.x, 2) + Math.pow(returnPoint.y - centerPointCross.y, 2));
+
+        if (vectorLength > 150) {
+            Point vectorDisc = new Point(x1 - x0, y1 - y0);
+            double vectorDiscLength = Math.sqrt(Math.pow(vectorDisc.x, 2) + Math.pow(vectorDisc.y, 2));
+            double vectorFactor = 150 / vectorDiscLength;
+            vectorDisc.x *= vectorFactor;
+            vectorDisc.y *= vectorFactor;
+            returnPoint = new Point(vectorDisc.x += centerPointCross.x, vectorDisc.y += centerPointCross.y);
+            return returnPoint;
+        }
+        return returnPoint;
+
+    }
+
+    public boolean insideCircle(Point goal) {
+        double x0, x1, y0, y1, d;
+        x0 = centerPointCross.x;
+        y0 = centerPointCross.y;
+        x1 = goal.x;
+        y1 = goal.y;
+        d = Math.sqrt(Math.pow(x1 - x0, 2) + Math.pow(y1 - y0, 2));
+        if (d <= crossRadius) {
+            return true;
+        }
+        return false;
+    }
+
     public ArrayList<Point> getBallsLocation() {
         return balls;
     }
@@ -484,7 +481,6 @@ public class ComputerVision extends JPanel implements IComputerVision {
         robotLocation.add(frontCenter);
         return robotLocation;
     }
-
 
     public Point ballsCloseToEdge(Point currentBall) {
         Point closeToEdge = new Point();
