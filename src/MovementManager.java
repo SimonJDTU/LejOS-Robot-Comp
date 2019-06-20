@@ -172,13 +172,24 @@ class MovementManager {
 
     private void driveRoute(SafetyCorner closestGoodPoint, Point goal) {
 
-        SafetyCorner rightPointResult = closestGoodPoint.right;
-        SafetyCorner leftPointResult = closestGoodPoint.left;
+        SafetyCorner rightPointResult = closestGoodPoint.right,leftPointResult = closestGoodPoint.left;
+        boolean rightValid=true, leftValid=true;
+
+        if(!(cv.cleanPath(closestGoodPoint.location,rightPointResult.location))){
+            rightValid=false;
+        }
+        if(!(cv.cleanPath(closestGoodPoint.location,leftPointResult.location))){
+            leftValid=false;
+        }
+
         int i=0,j=0;
         while(i++<7){
-           if(cv.cleanPath(rightPointResult.location,goal)){
-               break;
-           }
+            if(cv.cleanPath(rightPointResult.location,goal)){
+                break;
+            }
+            if(!(cv.cleanPath(rightPointResult.location,rightPointResult.right.location))){
+                rightValid=false;
+            }
            rightPointResult=rightPointResult.right;
         }
 
@@ -186,12 +197,15 @@ class MovementManager {
             if(cv.cleanPath(leftPointResult.location,goal)){
                 break;
             }
+            if(!(cv.cleanPath(leftPointResult.location,leftPointResult.left.location))){
+                leftValid=false;
+            }
             leftPointResult=leftPointResult.left;
         }
 
-        SafetyCorner nextPoint = closestGoodPoint;
-        if(!(cv.cleanPath(nextPoint.location,closestGoodPoint.location))){
-            if (i < j) {
+        if(!(cv.cleanPath(closestGoodPoint.location,goal))){
+            SafetyCorner nextPoint = closestGoodPoint;
+            if (i < j && rightValid) {
                 for (int k = 0; k < i; k++) {
                     System.out.println("Driving right: " + i);
                     nextPoint = nextPoint.right;
@@ -200,7 +214,7 @@ class MovementManager {
                     processImages();
                     moveDistance(calcDistance(cv.getRobotLocation(), nextPoint.location), 0, 0);
                 }
-            } else {
+            } else if ( j < i && leftValid){
                 for (int k = 0; k < j; k++) {
                     System.out.println("Driving left: " + j);
                     nextPoint = nextPoint.left;
@@ -209,6 +223,8 @@ class MovementManager {
                     processImages();
                     moveDistance(calcDistance(cv.getRobotLocation(), nextPoint.location), 0, 0);
                 }
+            }else {
+                System.out.println("Couldn't find path in driveRoute");
             }
         }
     }
@@ -256,7 +272,7 @@ class MovementManager {
 
     private void moveDistance(double distance, double noseOffset, double offset) {
         System.out.println("****************");
-        //System.out.println("Driving Length: " + distance);
+        System.out.println("Driving Length: " + distance);
         String command;
         command = "1-" + (int) ((distance / 3.844) - noseOffset - offset);
         client.sendMessage(command);
@@ -321,9 +337,7 @@ class MovementManager {
     }
 
     private boolean isCornerBall(Point goal) {
-        Point tempPoint = cv.ballsCloseToEdge(goal);
-        System.out.println("temppoit nfor ball :" + tempPoint);
-        return tempPoint != null;
+        return cv.ballsCloseToEdge(goal) != null;
     }
 
     private double calcDistance(ArrayList<Point> robotPoint, Point goal) {
