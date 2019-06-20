@@ -57,9 +57,9 @@ class MovementManager {
         securePoints.add(topMidSafetyCorner);
         securePoints.add(upperRightSafetyCorner);
         securePoints.add(rightMidSafetyCorner);
-        securePoints.add(lowerLeftSafetyCorner);
-        securePoints.add(botMidSafetyCorner);
         securePoints.add(lowerRightSafetyCorner);
+        securePoints.add(botMidSafetyCorner);
+        securePoints.add(lowerLeftSafetyCorner);
         securePoints.add(leftMidSafetyCorner);
 
     }
