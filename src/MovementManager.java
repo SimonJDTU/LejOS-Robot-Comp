@@ -14,7 +14,7 @@ class MovementManager {
     private ArrayList<SafetyCorner> securePoints = new ArrayList<>();
 
     private int PORT_CONNECTION = 5000;
-    private String IP_C0NNECTION = "192.168.137.239";
+    private String IP_C0NNECTION = "192.168.137.38";
 
     MovementManager() {
         this.client = new Client();
@@ -140,7 +140,7 @@ class MovementManager {
                 turnDegrees(calcAngle(cv.getRobotLocation(), goalPoint),true);
 
                 processImages();
-                if(freeball == false){
+                if(!freeball){
                     if (calcDistance(cv.getRobotLocation().get(0), goalPoint) >= 20) {
                         turnDegrees(calcAngle(cv.getRobotLocation(), goalPoint),true);
                         processImages();
@@ -157,7 +157,7 @@ class MovementManager {
                 }
 
                 processImages();
-                if(freeball == false){
+                if(!freeball){
                 if (calcDistance(cv.getRobotLocation().get(0), goalPoint) >= 20) {
                     turnDegrees(calcAngle(cv.getRobotLocation(), goalPoint),true);
                     processImages();
@@ -175,7 +175,6 @@ class MovementManager {
                 processImages();
                 turnDegrees(calcAngle(cv.getRobotLocation(), closestBall),false);
 
-                //last nut
                 processImages();
                 moveDistance(calcDistance(cv.getRobotLocation().get(0), closestBall), noseOffset, 0,false);
                 try {
@@ -275,7 +274,7 @@ class MovementManager {
 
         if (!(cv.cleanPath(closestGoodPoint.location, goal))) {
             SafetyCorner nextPoint = closestGoodPoint;
-            if (i <= j && rightValid||rightValid && !leftValid) {
+            if ((i <= j && rightValid)||(rightValid && !leftValid)){
                 for (int k = 0; k < i; k++) {
                     System.out.println("Driving right: " + i);
                     nextPoint = nextPoint.right;
@@ -284,7 +283,7 @@ class MovementManager {
                     processImages();
                     moveDistance(calcDistance(cv.getRobotLocation().get(0), nextPoint.location), 0, 0,true);
                 }
-            } else if (j <= i && leftValid||leftValid && !rightValid ) {
+            } else if ((j <= i && leftValid)||(leftValid && !rightValid)) {
                 for (int k = 0; k < j; k++) {
                     System.out.println("Driving left: " + j);
                     nextPoint = nextPoint.left;

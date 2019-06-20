@@ -21,9 +21,9 @@ public class ComputerVision extends JPanel implements IComputerVision {
 
     private final boolean RUN_INFINITE = false;
     private final Point topLeft = new Point(73,43);
-    private final Point topRight = new Point(593,39);
+    private final Point topRight = new Point(590,39);
     private final Point botLeft = new Point(71,427);
-    private final Point botRight = new Point(599,427);
+    private final Point botRight = new Point(595,427);
 
     private Point frontCenter = new Point(), backCenter = new Point(), lastPositionFront = new Point(), lastPositionBack = new Point(), goal2 = new Point();
     private ArrayList<Point> ballsLocation = new ArrayList<>();
@@ -83,7 +83,6 @@ public class ComputerVision extends JPanel implements IComputerVision {
     public void run() {
         Mat tempImage = new Mat();
         Mat tempImage1 = new Mat();
-        Mat tempImage3;
         Mat tempImage5 = new Mat();
         Mat cornerImage = new Mat();
         MatOfPoint2f cornersOfFrame, cornersOfTrack;
@@ -93,7 +92,6 @@ public class ComputerVision extends JPanel implements IComputerVision {
         ArrayList<Point> corners;
         do {
             if (camera.read(frame)) {
-                // Convert color for ball detection
 
                 // Median Blur seams not to be importened for now. Umcomment and edit k size to use.
                 //Imgproc.medianBlur(tempImage, tempImage, 11);
@@ -101,8 +99,6 @@ public class ComputerVision extends JPanel implements IComputerVision {
                 // Normalize the image to increase and improve ball detection
                 Imgproc.cvtColor(frame, cornerImage, COLOR_BGR2RGB);
                 Imgproc.cvtColor(cornerImage, cornerImage, COLOR_RGB2GRAY);
-                tempImage3 = cornerImage;
-                HighGui.imshow("hmm", tempImage3);
                 Imgproc.medianBlur(cornerImage, cornerImage, 7);
 
                 inRange(cornerImage, new Scalar(0, 0, 0), new Scalar(70, 70, 70), cornerImage);
@@ -139,8 +135,6 @@ public class ComputerVision extends JPanel implements IComputerVision {
                         ex.printStackTrace();
                     }
                 }*/
-
-
 
                 tempImage = frame.clone();
 
@@ -213,9 +207,6 @@ public class ComputerVision extends JPanel implements IComputerVision {
                     e.printStackTrace();
                 }
 
-
-                //inRange(tempImage8, new Scalar(25, 80, 245), new Scalar(40, 100, 255), combined);
-
                 //Colorize circles
                 ballsLocation.clear();
                 balls.clear();
@@ -251,8 +242,7 @@ public class ComputerVision extends JPanel implements IComputerVision {
                     circle(frame, ball, 1, new Scalar(255, 100, 100), 7, 8, 0);
                 }
 
-                HighGui.imshow("HSV", tempImage5);
-                showGUI();
+                showGUI(tempImage5);
             } else {
                 System.out.println("No picture taken");
             }
@@ -265,7 +255,7 @@ public class ComputerVision extends JPanel implements IComputerVision {
 
     }
 
-    private void showGUI() {
+    private void showGUI(Mat HSV) {
 
         //draw help corners
         if(RUN_INFINITE){
@@ -294,15 +284,8 @@ public class ComputerVision extends JPanel implements IComputerVision {
             Imgproc.line(frame, new Point(540, 240), new Point(540, 240), new Scalar(0, 0, 255), 5);
         }
 
-
-
-
-
-        HighGui.imshow("SHIET SON", frame);
-        //HighGui.imshow("whatever2", cornerImage);
-        //hGui.imshow("whatever", tempImage);
-        //HighGui.imshow("whatever3", tempImage3);
-        //HighGui.imshow("whatever5",tempImage5);
+        HighGui.imshow("MAIN FRAME", frame);
+        HighGui.imshow("HSV", HSV);
         HighGui.waitKey(1);
     }
 
@@ -465,10 +448,7 @@ public class ComputerVision extends JPanel implements IComputerVision {
         x1 = goal.x;
         y1 = goal.y;
         d = Math.sqrt(Math.pow(x1 - x0, 2) + Math.pow(y1 - y0, 2));
-        if (d <= crossRadius) {
-            return true;
-        }
-        return false;
+        return d <= crossRadius;
     }
 
     public ArrayList<Point> getBallsLocation() {
@@ -486,17 +466,16 @@ public class ComputerVision extends JPanel implements IComputerVision {
         Point closeToEdge = new Point();
         int safetyDistance = 100;
         int detectionDistance = 50;
-        int ySmallFromEdge = detectionDistance;
         int xBigFromEdge = 640-detectionDistance;
         int yBigFromEdge = 480-detectionDistance;
 
         //top left corner
-        if (currentBall.x < detectionDistance && currentBall.y < ySmallFromEdge) {
+        if (currentBall.x < detectionDistance && currentBall.y < detectionDistance) {
             closeToEdge.x = currentBall.x + safetyDistance;
             closeToEdge.y = currentBall.y + safetyDistance;
             return closeToEdge;
             //top right corner
-        } else if (currentBall.x > xBigFromEdge && currentBall.y < ySmallFromEdge) {
+        } else if (currentBall.x > xBigFromEdge && currentBall.y < detectionDistance) {
             closeToEdge.x = currentBall.x - safetyDistance;
             closeToEdge.y = currentBall.y + safetyDistance;
             return closeToEdge;
@@ -516,7 +495,7 @@ public class ComputerVision extends JPanel implements IComputerVision {
             closeToEdge.y = currentBall.y - safetyDistance;
             return closeToEdge;
             //top
-        } else if (currentBall.y < ySmallFromEdge) {
+        } else if (currentBall.y < detectionDistance) {
             closeToEdge.x = currentBall.x;
             closeToEdge.y = currentBall.y + safetyDistance;
             return closeToEdge;
