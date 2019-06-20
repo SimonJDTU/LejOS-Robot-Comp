@@ -12,9 +12,10 @@ Hvis det ikke virker efter kloning prøv dette:
  
  #Sæt op banen
  For at sætte banen op skal du gøre følgende:
- - Sæt den globale værdi "RUN_INFINITLY" til TRUE i ComputerVision. Herefter kør programmet
+ - Sæt den globale værdi "RUN_INFINITLY" til TRUE i ComputerVision
+ - Kør programmet
  - Din cursors placering på computerskærmen vil blive noteret i consollen. Placer din mus på midten af de sorte punkter på hjørnerne og noter placeringen
- - Indsæt disse noter i de globale punkter topLeft, topRight, botLeft og botRight
+ - Indsæt disse noter i de globale punkter "topLeft", "topRight", "botLeft" og "botRight"
  - Stop programmets kørsel
  - Sæt den globale værdi "RUN_INFINITLY" til FALSE i ComputerVision.
  
