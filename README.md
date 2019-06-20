@@ -9,3 +9,12 @@ Hvis det ikke virker efter kloning prøv dette:
 
  - Højre klik på projekt-mappen og og vælg "add Framework support" og herefter vælg "Maven"
  - Hvis klasserne ikke er genkendt som java class, højre klik på mappen de ligger i og vælg "Mark Directory as -> Sources Root"
+ 
+ #Sæt op banen
+ For at sætte banen op skal du gøre følgende:
+ - Sæt den globale værdi "RUN_INFINITLY" til TRUE i ComputerVision. Herefter kør programmet
+ - Din cursors placering på computerskærmen vil blive noteret i consollen. Placer din mus på midten af de sorte punkter på hjørnerne og noter placeringen
+ - Indsæt disse noter i de globale punkter topLeft, topRight, botLeft og botRight
+ - Stop programmets kørsel
+ - Sæt den globale værdi "RUN_INFINITLY" til FALSE i ComputerVision.
+ 
