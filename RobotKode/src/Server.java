@@ -1,95 +1,167 @@
-// A Java program for a Server
-import java.net.*;
+import lejos.hardware.Button;
+import lejos.hardware.Sound;
+import lejos.utility.Stopwatch;
+
 import java.io.*;
-import java.text.NumberFormat;
+import java.net.*;
 
 public class Server
 {
-    //initialize socket and input stream
-    private Socket		 socket = null;
-    private ServerSocket server = null;
-    private DataInputStream in	 = null;
-    Robot robot = new Robot();
-    String[] InputArray = new String[3];
-
-
-    // constructor with port
-    public Server(int port)
+    private ServerSocket serverSocket;
+    private Socket clientSocket;
+    private PrintWriter out;
+    private BufferedReader in;
+    private String[] SplitInput = new String[3];
+    private Robot robot = new Robot();
+    private Stopwatch stopwatch = new Stopwatch();
+    public void start(int port)
     {
-        // starts server and waits for a connection
-        try
-        {
-            server = new ServerSocket(port);
-            System.out.println("Server started");
+        try {
+            System.out.println("Waiting for a client");
+            serverSocket = new ServerSocket(port);
+            clientSocket = serverSocket.accept();
+            System.out.println("Connected");
+            Sound.setVolume(100);
+            Sound.beepSequenceUp();
+            out = new PrintWriter(clientSocket.getOutputStream(), true);
+            in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            stopwatch.reset();
 
-            System.out.println("Waiting for a client ...");
-
-            socket = server.accept();
-            System.out.println("Client accepted");
-
-            // takes input from the client socket
-            in = new DataInputStream(
-                    new BufferedInputStream(socket.getInputStream()));
-
-            String line = "";
-
-            // reads message from client until "Over" is sent
-            while (!line.equals("Over"))
+            String inputLine;
+            while ((inputLine = in.readLine()) != null)
             {
-                try
+                SplitInput = inputLine.split("-");
+                if (".".equals(SplitInput[0]) || stopwatch.elapsed()/1000 >= 480)//480 = 8 minutter
                 {
-                    line = in.readUTF();
-                    InputArray = line.split("-");
-                    if (InputArray[0].equals("1"))
+                    out.println("Goodbye");
+                    System.out.println("Goodbye");
+                    int totaltid = stopwatch.elapsed()/1000;
+                    int minutter = totaltid / 60;
+                    int sekunder = totaltid - minutter * 60;
+                    System.out.println("Tid: " + minutter + "m og " + sekunder + "s");
+                    robot.StopRobotD();
+                    Sound.setVolume(100);
+                    Sound.beepSequenceUp();
+                    break;
+                }
+                else if ("1".equals(SplitInput[0]))
+                {
+                    System.out.println("Received message: " + inputLine);
+                    //Robotten kører fremad
+                    if(!SplitInput[1].equals(""))
                     {
-                        System.out.println(line);
-                        robot.MoveDistanceForwardAB(Integer.parseInt(InputArray[1]));
+                        robot.MoveDistanceForwardAB(Integer.parseInt(SplitInput[1]), Integer.parseInt(SplitInput[2]));
+                        out.println("OK");
                     }
-                    else if (InputArray[0].equals("2"))
+                    else
                     {
-                        System.out.println(line);
-                        robot.TurnClockwiseAB(Integer.parseInt(InputArray[1]));
-                    }
-                    else if (InputArray[0].equals("3"))
-                    {
-                        System.out.println(line);
-                        robot.TurnCounterclockwiseAB(Integer.parseInt(InputArray[1]));
-                    }
-                    else if (InputArray[0].equals("4"))
-                    {
-                        robot.ReleaseBallsD();
-                        robot.ThrowBallsC(3);
-                        robot.StoreBallsC(3);
-                        robot.CaptureBallsD();
+                        robot.MoveDistanceBackwardsAB(Integer.parseInt(SplitInput[2]));
+                        out.println("OK");
                     }
 
 
+                    //Message to the PC
+
                 }
-                catch(NumberFormatException nfe)
+                else if ("2".equals(SplitInput[0]))
                 {
-                    System.out.print(nfe);
+                    System.out.println("Received message: " + inputLine);
+                    //Robotten drejer mod uret
+
+                    robot.TurnClockwiseAB(Integer.parseInt(SplitInput[1]), Integer.parseInt(SplitInput[2]));
+
+                    //Message to the PC
+                    out.println("OK");
                 }
-                catch(IOException i)
+                else if ("3".equals(SplitInput[0]))
                 {
-                    System.out.println(i);
-                    System.exit(0);
+                    System.out.println("Received message: " + inputLine);
+                    //Robotten drejer med uret
+
+                    robot.TurnCounterclockwiseAB(Integer.parseInt(SplitInput[1]), Integer.parseInt(SplitInput[2]));
+
+
+                    //Message to the PC
+                    out.println("OK");
+                }
+                else if ("4".equals(SplitInput[0]))
+                {
+                    System.out.println("Received message: " + inputLine);
+                    //Robotten indsamler bolde
+
+                    robot.ReleaseBallsD();
+                    robot.StoreBallsC(3);
+                    robot.ThrowBallsC(3);
+                    robot.CaptureBallsD();
+
+
+
+                    out.println("OK");
+                }
+                else if ("5".equals(SplitInput[0]))
+                {
+                    System.out.println("Received message: " + inputLine);
+                    //Robotten afleverer bolde
+
+
+                    robot.CaptureBallsD();
+
+
+                    out.println("Deliver balls");
+                    System.out.println("Deliver balls");
+                }
+                else if ("6".equals(SplitInput[0]))
+                {
+                    System.out.println("Received message: " + inputLine);
+                    //Robotten bakker
+
+                    robot.CaptureBallsD();
+                    robot.MoveDistanceBackwardsAB(Integer.parseInt(SplitInput[1]));
+                    robot.CaptureBallsD();
+                    out.println("OK");
+                }
+                else if ("7".equals(SplitInput[0]))
+                {
+                    System.out.println("Received message: " + inputLine);
+                    //Robotten frem med en bestemt hastighed
+
+                    out.println("OK");
+
+                    System.out.println("Received message: " + inputLine);
+                    //Robotten kører fremad med bestemt hastighed
+                    if(!SplitInput[1].equals(""))
+                    {
+                        robot.MoveDistanceForwardAB(Integer.parseInt(SplitInput[1], Integer.parseInt(SplitInput[2])));
+                        out.println("OK");
+                    }
+                    else
+                    {
+                        robot.MoveDistanceBackwardsAB(Integer.parseInt(SplitInput[2]));
+                        out.println("OK");
+                    }
+                }
+
+                else
+                {
+                    System.out.println("Received message: " + inputLine);
+                    out.println(SplitInput[0]);
+                    System.out.println(SplitInput[0]);
                 }
             }
-            System.out.println("Closing connection");
+        }
+        catch(IOException e) {
+            e.printStackTrace();
+        }
 
-            // close connection
-            socket.close();
-            in.close();
-        }
-        catch(IOException i)
-        {
-            System.out.println(i);
-            System.exit(0);
-        }
     }
 
-    public static void main(String args[])
+
+    public static void main(String[] args)
     {
-        Server server = new Server(5000);
+
+        Server server = new Server();
+        server.robot.CaptureBallsD();
+        server.start(5000);
+        Button.waitForAnyPress();
     }
 }
