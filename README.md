@@ -4,7 +4,7 @@ Vi har som projekt at skulle lave en LEGO robot som kan indsamle bordtennisbolde
 Boldene skal ind i et af to mål med forskellige størrelser, det lille mål giver flere point.
 Projektet går ud på at lave få styr på projektstyring med en gruppe på 8 personer, og samtidig løse problemstillingen.
 
-The robots final lap can be seen here: https://www.youtube.com/watch?v=WGuEuml-Kc4&
+Robottens endelige kørsel kan ses her: https://www.youtube.com/watch?v=WGuEuml-Kc4&
 
 #Trouble shooting
 Hvis det ikke virker efter kloning prøv dette:
